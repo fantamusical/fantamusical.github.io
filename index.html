@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#f4f3ed">
   <meta name="referrer" content="strict-origin-when-cross-origin">
-  <title>Fantamusical | Pronostici di classe</title>
+  <title>Fantamusical | Il fantagioco dei musical</title>
   <style>
 
     :root {
@@ -193,6 +193,39 @@
     .button.danger { color: #9b3a26; background: var(--surface); border-color: #efc9bf; }
     .two-col { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
     a.inline { color: var(--green); }
+    .actor-picks { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+    .actor-picks select { flex: 1 1 140px; height: 34px; }
+    .student-chip.hit, .role-chip.hit { color: #1f5a3f; background: #dff0c8; }
+    .choice-card.hit { border-color: #b7d98f; }
+    .board-row.compact > :last-child { display: block; }
+    .result-strip { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 17px; margin-bottom: 15px; background: #eef5df; border: 1px solid #d6e8b6; border-radius: 8px; }
+    .result-strip .eyebrow { margin-bottom: 2px; }
+    .result-title { font: 22px/1.2 var(--serif); }
+    .result-points { color: var(--green); font: 34px/1 var(--serif); white-space: nowrap; }
+    .result-points span { font: 600 13px var(--sans); }
+    .team-list { display: grid; gap: 12px; }
+    .team-card { padding: 15px 17px; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; box-shadow: var(--shadow); }
+    .team-card.muted { opacity: .7; box-shadow: none; }
+    .team-head { display: flex; align-items: center; gap: 10px; }
+    .team-head .grow { flex: 1; min-width: 0; }
+    .team-choices { display: grid; gap: 8px; margin-top: 12px; }
+    .team-choice { display: flex; gap: 10px; padding: 9px 11px; background: #fafaf5; border: 1px solid #edf0e9; border-radius: 6px; }
+    .team-choice.hit { background: #f3f9e8; border-color: #d6e8b6; }
+    .team-choice .grow { flex: 1; min-width: 0; }
+    .choice-num { display: grid; width: 22px; height: 22px; flex: 0 0 auto; place-items: center; color: #293d33; background: var(--lime); border-radius: 50%; font: 12px var(--serif); }
+    .user-link { color: inherit; text-decoration: none; }
+    .user-link:hover span { text-decoration: underline; }
+    .consent { display: flex; gap: 10px; align-items: flex-start; padding: 12px 14px; color: #45544b; background: #f3f6ee; border: 1px solid var(--line); border-radius: 6px; font-size: 13px; }
+    .consent input { width: 18px; height: 18px; margin-top: 2px; flex: 0 0 auto; }
+    .pick-row { display: grid; grid-template-columns: minmax(120px, 1fr) minmax(0, 2fr); gap: 8px; }
+    .mini-results { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+    .mini-result { display: grid; gap: 2px; padding: 10px 12px; background: #fafaf5; border: 1px solid #edf0e9; border-radius: 6px; font-size: 12px; }
+    .mini-result span { color: var(--muted); }
+    .mini-result.done { background: #f3f9e8; border-color: #d6e8b6; }
+    .mini-result.done span { color: var(--ink); font-weight: 650; }
+    .team-card.mine { border-color: #b8cbb9; }
+    a.code { text-decoration: none; }
+    @media (max-width: 560px) { .pick-row { grid-template-columns: 1fr; } }
     .rules .step { padding: 18px 0; }
     .rules p { margin: 6px 0 0; color: #45544b; }
     .rules ul { margin: 8px 0 0; padding-left: 18px; color: #45544b; }
@@ -203,15 +236,17 @@
 <body>
   <div class="shell">
     <aside>
-      <div class="brand"><div class="brand-mark">F</div><div><div class="brand-name">Fantamusical</div><div class="brand-caption">Pronostici di classe</div></div></div>
+      <div class="brand"><div class="brand-mark">F</div><div><div class="brand-name">Fantamusical</div><div class="brand-caption">Il fantagioco dei musical</div></div></div>
       <div class="mobile-brand"><div class="brand-mark">F</div><span>Fantamusical</span></div>
       <div class="nav-label">Il gioco</div>
       <nav class="nav" aria-label="Navigazione">
-        <button data-go="#/" data-nav="home"><span class="nav-icon">▦</span>Le mie classi</button>
+        <button data-go="#/" data-nav="home"><span class="nav-icon">★</span>Lega generale</button>
+        <button data-go="#/leghe" data-nav="leghe"><span class="nav-icon">◎</span>Le mie leghe</button>
+        <button data-go="#/classi" data-nav="classi"><span class="nav-icon">▦</span>Classi</button>
         <button data-go="#/catalogo" data-nav="catalogo"><span class="nav-icon">♫</span>Catalogo</button>
         <button data-go="#/regolamento" data-nav="regolamento"><span class="nav-icon">§</span>Regolamento</button>
       </nav>
-      <div class="side-note"><strong>Classi private.</strong>Si entra solo con il link di invito o chiedendo l'accesso a chi è già dentro.</div>
+      <div class="side-note"><strong>Solo con il tuo consenso.</strong>Compari come attore solo nella classe che hai scelto tu, e solo chi ha accesso a quella classe può scommettere sul tuo ruolo.</div>
     </aside>
     <main>
       <div class="topline"><div class="crumb" id="crumb">Fantamusical</div><div id="user-slot"></div></div>
@@ -219,17 +254,17 @@
     </main>
   </div>
   <div id="toast-root" aria-live="polite"></div>
+  <script src="config.js"></script>
   <script>
     (() => {
-      /* ====== CONFIGURAZIONE: incolla qui i due valori ottenuti seguendo SETUP.md ====== */
-      const CONFIG = {
-        GOOGLE_CLIENT_ID: '808202834456-1q3gk4br0p38j9d19safj8vtle5771me.apps.googleusercontent.com',
-        API_URL: 'https://script.google.com/macros/s/AKfycbwQW80-mgGXd4Fo8CLgusyy6ZWh_eQGW3Mr6998gDLkZHa5-HvplaSXZEk2Y3M6ekDJVA/exec'
-      };
-      /* ================================================================================ */
+      // The two deployment values live in config.js (uploaded once), so this file can be replaced freely.
+      const CONFIG = Object.assign({ GOOGLE_CLIENT_ID: '808202834456-1q3gk4br0p38j9d19safj8vtle5771me.apps.googleusercontent.com', API_URL: 'https://fantamusical.github.io/' }, window.FANTAMUSICAL_CONFIG || {});
 
       const configured = !CONFIG.GOOGLE_CLIENT_ID.startsWith('INCOLLA') && !CONFIG.API_URL.startsWith('INCOLLA');
       const TOKEN_KEY = 'fantamusical-session';
+      const JOIN_KEY = 'fantamusical-join';
+      const MUSICAL_POINTS = [6, 4, 2];
+      const MAX_ACTORS = 3;
       const seedCatalog = [
         ["The 25th Annual Putnam County Spelling Bee","William Barfée, Olive Ostrovsky, Leaf Coneybear, Logainne SchwartzandGrubenierre, Chip Tolentino, Marcy Park, Rona Lisa Peretti, Vice Principal Douglas Panch, Mitch Mahoney"],
         ["42nd Street","Peggy Sawyer, Julian Marsh, Dorothy Brock, Billy Lawlor, Maggie Jones, Bert Barry, Pat Denning, Anytime Annie, Abner Dillon"],
@@ -540,19 +575,23 @@
       const sortKey = title => title.replace(/^(the|a|an) /i, '').replace(/^& /, '');
       const byTitle = (a, b) => sortKey(a.title).localeCompare(sortKey(b.title), 'en', { sensitivity: 'base' });
       const storage = {
-        get(key) { try { return JSON.parse(localStorage.getItem(key)); } catch { return null; } },
-        set(key, value) { try { localStorage.setItem(key, JSON.stringify(value)); } catch { /* storage unavailable */ } },
-        remove(key) { try { localStorage.removeItem(key); } catch { /* storage unavailable */ } }
+        get(key, area = localStorage) { try { return JSON.parse(area.getItem(key)); } catch { return null; } },
+        set(key, value, area = localStorage) { try { area.setItem(key, JSON.stringify(value)); } catch { /* storage unavailable */ } },
+        remove(key, area = localStorage) { try { area.removeItem(key); } catch { /* storage unavailable */ } }
       };
 
-      let session = null;      // { token, exp, name, picture }
-      let me = null;           // { user, classes, pending }
-      let catalog = [];        // [{ key, title, roles }]
+      let session = null;      // { token, exp }
+      let me = null;           // server profile + classes + leagues
+      let catalog = [];
       let catalogByKey = new Map();
-      let current = null;      // class detail from the server
-      let currentTab = 'pronostico';
-      let draft = [];          // ballot being edited: [{ musicalKey, cast }]
-      let resultDraft = null;  // official result being edited
+      let general = null;      // general league data
+      let generalDraft = null; // { name, picks: [ {classId, musicalKey} | null ] x3 }
+      let current = null;      // open league
+      let currentTab = 'squadra';
+      let draft = [];          // league team being edited
+      let teamName = '';
+      let resultDraft = null;  // official result being edited (league "Classifica" tab or class page)
+      let classPage = null;    // open class page
       let catalogQuery = '';
       let gisLoaded = false;
 
@@ -561,15 +600,16 @@
         const root = document.getElementById('toast-root');
         root.innerHTML = `<div class="toast">${esc(message)}</div>`;
         clearTimeout(toast.timer);
-        toast.timer = setTimeout(() => { root.innerHTML = ''; }, 3200);
+        toast.timer = setTimeout(() => { root.innerHTML = ''; }, 3400);
       };
       const heading = (eyebrow, title, intro, action = '') => `<div class="page-heading"><div><div class="eyebrow">${eyebrow}</div><h1>${esc(title)}</h1>${intro ? `<p class="intro">${intro}</p>` : ''}</div>${action}</div>`;
-      const avatar = person => person?.picture
-        ? `<img class="avatar" src="${esc(person.picture)}" alt="" referrerpolicy="no-referrer">`
-        : `<span class="avatar fallback">${esc((person?.name || '?').slice(0, 1).toUpperCase())}</span>`;
+      const initials = name => `<span class="avatar fallback">${esc((name || '?').slice(0, 1).toUpperCase())}</span>`;
       const titleOf = key => catalogByKey.get(key)?.title || key || '—';
       const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
+      const setCrumb = html => { document.getElementById('crumb').innerHTML = html; };
       const renderLoading = text => { view.innerHTML = `<section class="panel empty"><strong>${esc(text || 'Caricamento…')}</strong>Un attimo di pazienza.</section>`; };
+      const fmtDate = iso => { const d = new Date(iso); return isNaN(d) ? '' : d.toLocaleString('it-IT', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }); };
+      const positionsOf = items => items.map(item => items.findIndex(other => other.points === item.points) + 1); // ties share a position
       async function withBusy(button, fn) {
         if (button) button.disabled = true;
         try { await fn(); } catch (error) { if (error?.message) toast(error.message); } finally { if (button) button.disabled = false; }
@@ -579,7 +619,7 @@
       function buildCatalog(extras) {
         const map = new Map();
         seedCatalog.forEach(([title, roles]) => map.set(musicalKey(title), { key: musicalKey(title), title, roles: roles ? roles.split(', ') : [] }));
-        (extras || []).forEach(mergeCatalogEntry.bind(null, map));
+        (extras || []).forEach(entry => mergeCatalogEntry(map, entry));
         catalogByKey = map;
         catalog = [...map.values()].sort(byTitle);
       }
@@ -588,10 +628,8 @@
         if (!existing) { map.set(entry.key, { key: entry.key, title: entry.title, roles: [...entry.roles] }); return; }
         entry.roles.forEach(role => { if (!existing.roles.some(r => musicalKey(r) === musicalKey(role))) existing.roles.push(role); });
       }
-      function applyCatalogEntry(entry) {
-        mergeCatalogEntry(catalogByKey, entry);
-        catalog = [...catalogByKey.values()].sort(byTitle);
-      }
+      function applyCatalogEntry(entry) { mergeCatalogEntry(catalogByKey, entry); catalog = [...catalogByKey.values()].sort(byTitle); }
+      const musicalOptions = (selected, placeholder = 'Scegli un musical') => `<option value="">${placeholder}</option>${catalog.map(m => `<option value="${esc(m.key)}" ${m.key === selected ? 'selected' : ''}>${esc(m.title)}</option>`).join('')}${selected && !catalogByKey.has(selected) ? `<option value="${esc(selected)}" selected>${esc(selected)}</option>` : ''}`;
 
       /* ---------- Google sign-in ---------- */
       function decodeJwt(token) {
@@ -601,12 +639,12 @@
       }
       function onCredential(response) {
         const claims = decodeJwt(response.credential);
-        session = { token: response.credential, exp: claims.exp, name: claims.name || claims.email, picture: claims.picture || '' };
+        session = { token: response.credential, exp: claims.exp };
         storage.set(TOKEN_KEY, session);
         boot();
       }
       function signOut(expired) {
-        session = null; me = null; current = null;
+        session = null; me = null; current = null; general = null; classPage = null;
         storage.remove(TOKEN_KEY);
         if (gisLoaded) google.accounts.id.disableAutoSelect();
         document.body.classList.remove('signed-in');
@@ -638,6 +676,7 @@
         }
         if (!out.ok) {
           if (out.code === 'auth') { signOut(true); throw new Error(''); }
+          if (out.code === 'onboarding') { me = { ...(me || {}), onboarded: false }; location.hash = '#/'; }
           const error = new Error(out.error || 'Errore imprevisto.');
           error.code = out.code;
           throw error;
@@ -649,8 +688,9 @@
       /* ---------- Boot & routing ---------- */
       async function boot() {
         document.body.classList.add('signed-in');
-        renderUser();
         renderLoading('Accesso in corso…');
+        const join = new URLSearchParams(location.search).get('lega');
+        if (join) { storage.set(JOIN_KEY, join, sessionStorage); history.replaceState(null, '', location.pathname + location.hash); }
         try {
           const [meData, extras] = await Promise.all([api('me'), api('catalog')]);
           me = meData;
@@ -660,17 +700,21 @@
           return;
         }
         renderUser();
-        const join = new URLSearchParams(location.search).get('join');
-        if (join) {
-          history.replaceState(null, '', location.pathname + location.hash);
-          try {
-            const joined = await api('joinWithInvite', { code: join });
-            toast(joined.already ? `Fai già parte di ${joined.name}.` : `Benvenuto in ${joined.name}!`);
-            await refreshMe();
-            history.replaceState(null, '', `${location.pathname}#/classe/${joined.id}`);
-          } catch (error) { if (error.message) toast(error.message); }
-        }
+        await consumePendingJoin();
         route();
+      }
+
+      // A league link opened before sign-in or onboarding is remembered and used as soon as possible.
+      async function consumePendingJoin() {
+        const code = storage.get(JOIN_KEY, sessionStorage);
+        if (!code || !me?.onboarded) return;
+        storage.remove(JOIN_KEY, sessionStorage);
+        try {
+          const joined = await api('joinLeague', { code });
+          toast(joined.already ? `Fai già parte di ${joined.name}.` : `Benvenuto nella lega ${joined.name}!`);
+          await refreshMe();
+          history.replaceState(null, '', `${location.pathname}#/lega/${joined.id}`);
+        } catch (error) { if (error.message) toast(error.message); }
       }
 
       function route() {
@@ -678,196 +722,380 @@
         if (page === 'regolamento' && !me) return renderRules();   // readable before signing in too
         if (!session) return renderLogin();
         if (!me) return;
-        const section = ['catalogo', 'regolamento'].includes(page) ? page : 'home';
+        renderUser();
+        if (!me.onboarded && page !== 'regolamento') return renderProfile(true);
+        const section = { leghe: 'leghe', lega: 'leghe', classi: 'classi', classe: 'classi', catalogo: 'catalogo', regolamento: 'regolamento' }[page] || 'home';
         document.querySelectorAll('.nav [data-nav]').forEach(button => button.classList.toggle('active', button.dataset.nav === section));
-        if (page === 'catalogo') return renderCatalog();
         if (page === 'regolamento') return renderRules();
-        if (page === 'classe' && id) return openClass(id.toUpperCase(), tab);
-        renderHome();
+        if (page === 'catalogo') return renderCatalog();
+        if (page === 'profilo') return renderProfile(false);
+        if (page === 'leghe') { renderLeagues(); return refreshMe().then(() => { if (location.hash.startsWith('#/leghe')) renderLeagues(); }).catch(() => {}); }
+        if (page === 'lega' && id) return openLeague(id.toUpperCase(), tab);
+        if (page === 'classi') { renderClasses(); return refreshMe().then(() => { if (location.hash.startsWith('#/classi')) renderClasses(); }).catch(() => {}); }
+        if (page === 'classe' && id) return openClassPage(id);
+        return openGeneral();
       }
       window.addEventListener('hashchange', route);
 
-      /* ---------- Views ---------- */
+      /* ---------- Shell ---------- */
       function renderUser() {
         const slot = document.getElementById('user-slot');
-        slot.innerHTML = session ? `<div class="user-chip">${avatar(session)}<span>${esc(session.name)}</span><button class="button secondary small" data-action="logout">Esci</button></div>` : '';
+        if (!session) { slot.innerHTML = ''; return; }
+        const who = me?.onboarded ? `${initials(me.user.name)}<a class="user-link" href="#/profilo" title="Il tuo profilo"><span>${esc(me.user.name)} · ${esc(me.user.classId)}</span></a>` : '';
+        slot.innerHTML = `<div class="user-chip">${who}<button class="button secondary small" data-action="logout">Esci</button></div>`;
       }
 
       function renderLogin(message = '') {
-        document.getElementById('crumb').textContent = 'Fantamusical';
+        setCrumb('Fantamusical');
         renderUser();
         view.innerHTML = `<div class="login-card">
           <div class="eyebrow">Benvenuti sul palco</div>
           <h1>Fantamusical</h1>
-          <p class="intro">Il gioco dei pronostici tra amici: indovina quale musical metterà in scena ogni classe e chi interpreterà ogni ruolo.</p>
+          <p class="intro">Il fantagioco tra amici: schiera la tua squadra indovinando quale musical metterà in scena ogni classe e chi interpreterà ogni ruolo.</p>
           ${message ? `<div class="notice">${esc(message)}</div>` : ''}
-          ${configured ? '<div id="google-button"></div><p class="subtle" style="margin-top:18px">Usiamo Google solo per riconoscerti: nome, email e foto profilo.<br><a class="inline" href="#/regolamento">Leggi il regolamento</a> · <a class="inline" href="privacy.html">Privacy</a></p>'
-                       : '<div class="notice">L’app non è ancora configurata: inserisci <b>GOOGLE_CLIENT_ID</b> e <b>API_URL</b> in cima allo script (vedi SETUP.md).</div>'}
+          ${configured ? '<div id="google-button"></div><p class="subtle" style="margin-top:18px">Usiamo Google solo per riconoscerti. Nel gioco comparirai con il nome che scegli tu.<br><a class="inline" href="#/regolamento">Leggi il regolamento</a> · <a class="inline" href="privacy.html">Privacy</a></p>'
+                       : '<div class="notice">L’app non è ancora configurata: inserisci <b>GOOGLE_CLIENT_ID</b> e <b>API_URL</b> nel file <b>config.js</b> (vedi SETUP.md).</div>'}
         </div>`;
         showGoogleButton();
       }
 
-      function renderHome() {
-        current = null;
-        document.getElementById('crumb').innerHTML = 'Fantamusical · <strong>Le mie classi</strong>';
-        const cards = me.classes.map(room => `<a class="class-link" href="#/classe/${esc(room.id)}"><h3>${esc(room.name)}</h3>
-            <div class="class-meta"><span class="code">${esc(room.id)}</span><span>${plural(room.members, 'membro', 'membri')}</span><span>${room.hasResult ? '✓ Risultato pubblicato' : 'Pronostici aperti'}</span>${room.requests ? `<span class="badge">${room.requests}</span>` : ''}</div></a>`).join('');
-        const others = me.others || [];
-        const otherRows = others.map(room => `<div class="person-row" data-class-name="${esc(normalizeSearch(room.name))}"><div class="grow"><div class="person-name">${esc(room.name)}</div>
-            <div class="subtle">${plural(room.members, 'membro', 'membri')}${room.createdBy ? ` · creata da ${esc(room.createdBy)}` : ''}</div></div>
-            ${room.pending
-              ? `<span class="status-wait">In attesa di approvazione</span><button class="button secondary small" data-action="cancel-request" data-id="${esc(room.id)}">Annulla</button>`
-              : `<button class="button small" data-action="request" data-id="${esc(room.id)}">Chiedi di entrare</button>`}</div>`).join('');
-        view.innerHTML = `${heading('Il tuo palcoscenico', 'Le mie classi', 'Ogni classe è un Fantamusical a sé, con i suoi membri, studenti, pronostici e classifica. Il contenuto delle classi lo vede solo chi ne fa parte.')}
-          ${me.classes.length ? `<div class="class-grid">${cards}</div>` : `<section class="panel empty" style="margin-bottom:16px"><strong>Nessuna classe per ora</strong>Chiedi di entrare in una classe qui sotto, creane una nuova, oppure apri il link di invito che ti hanno mandato.</section>`}
-          <section class="panel" style="margin-bottom:16px"><div class="panel-head"><h2>Altre classi</h2><span class="subtle">${plural(others.length, 'classe', 'classi')}</span></div>
-            <p class="subtle" style="margin-top:-6px">Chiedi di entrare: un membro della classe approverà la richiesta. Con un link di invito entri subito.</p>
-            ${others.length > 6 ? `<div class="field" style="margin-bottom:6px"><input id="class-search" type="search" placeholder="Cerca una classe" aria-label="Cerca una classe"></div>` : ''}
-            ${otherRows || '<p class="subtle">Non ci sono altre classi al momento.</p>'}
-            <p id="class-none" class="subtle" hidden>Nessuna classe con questo nome.</p></section>
-          <section class="panel"><div class="panel-head"><h2>Crea una classe</h2></div>
-            <form id="create-class-form" class="field"><label for="class-name">Nome</label><div class="link-box"><input id="class-name" name="name" maxlength="80" placeholder="Es. 3B Liceo Musicale" required><button class="button" type="submit">Crea</button></div></form>
-            <p class="subtle">Diventerai il primo membro e potrai invitare gli altri con un link o approvare le loro richieste.</p></section>`;
+      /* ---------- Profile & first access (consent) ---------- */
+      function renderProfile(first) {
+        setCrumb(first ? 'Fantamusical · <strong>Primo accesso</strong>' : 'Fantamusical · <strong>Profilo</strong>');
+        const u = me.onboarded ? me.user : { name: '', classId: '' };
+        const classOptions = `<option value="">Scegli la tua classe</option>${me.classes.map(c => `<option value="${esc(c.id)}" ${c.id === u.classId ? 'selected' : ''}>${esc(c.name)}</option>`).join('')}`;
+        view.innerHTML = `${heading(first ? 'Primo accesso' : 'Il tuo profilo', first ? 'Entra in scena' : 'Profilo', first
+            ? 'Per giocare scegli la classe di cui fai parte e il nome con cui comparirai. Diventerai un <b>attore</b> della tua classe: è l’unico modo per entrare in una classe.'
+            : 'Il nome e la classe con cui compari nel gioco.')}
+          <section class="panel" style="max-width:640px">
+            <form id="profile-form" class="field" style="gap:14px">
+              <div class="field"><label for="profile-class">La mia classe</label><select id="profile-class" name="classId" required>${classOptions}</select></div>
+              <div class="field"><label for="profile-name">Il mio nome (come lo vedranno gli altri)</label><input id="profile-name" name="name" maxlength="40" required placeholder="Es. Giulia R." value="${esc(u.name)}"></div>
+              ${first ? `<label class="consent"><input type="checkbox" name="consent" required> <span>Accetto di comparire come <b>attore</b> della mia classe: chi ha accesso alla classe vedrà il mio nome e potrà scommettere sui ruoli che mi verranno assegnati. In cambio potrò scommettere sui ruoli degli altri. Posso ritirare il consenso eliminando il profilo.</span></label>` : ''}
+              <div class="form-footer" style="margin-top:4px"><span class="form-message">${first ? 'Potrai cambiare nome e classe in seguito dal profilo.' : 'Cambiando classe smetti di comparire come attore in quella precedente.'}</span><button class="button" type="submit">${first ? 'Entra nel gioco' : 'Salva profilo'}</button></div>
+            </form>
+          </section>
+          ${first ? '' : `<section class="panel" style="max-width:640px;margin-top:16px"><div class="panel-head"><h2>Ritira il consenso</h2></div>
+            <p class="subtle">Elimina il tuo profilo: sparisci dagli attori della tua classe e vengono cancellati le tue squadre, le leghe a cui partecipi e gli accessi alle classi.</p>
+            <button class="button danger small" data-action="delete-profile">Elimina il mio profilo</button></section>`}`;
       }
 
-      async function openClass(id, tab) {
-        currentTab = ['pronostico', 'risultato', 'studenti', 'membri'].includes(tab) ? tab : 'pronostico';
+      /* ---------- General league ---------- */
+      async function openGeneral() {
+        setCrumb('Fantamusical · <strong>Lega generale</strong>');
+        if (!general) renderLoading('Caricamento della lega generale…');
+        try { await loadGeneral(); } catch (error) { if (session && error.message) view.innerHTML = `<section class="panel empty"><strong>Lega non disponibile</strong>${esc(error.message)}</section>`; return; }
+        if (!location.hash.replace(/^#\/?/, '')) renderGeneral();
+      }
+      async function loadGeneral() {
+        general = await api('getGeneral');
+        const mine = general.teams.find(t => t.mine);
+        generalDraft = { name: mine?.name || `Squadra di ${me.user.name}`, picks: [0, 1, 2].map(i => mine?.picks?.[i] ? { ...mine.picks[i] } : null) };
+      }
+      const resultOfClass = id => general?.results?.[id];
+
+      function renderGeneral() {
+        const g = general;
+        const mine = g.teams.find(t => t.mine);
+        const anyResult = Object.keys(g.results).length > 0;
+        const usedClasses = generalDraft.picks.map(p => p?.classId).filter(Boolean);
+        const slots = generalDraft.picks.map((pick, i) => {
+          const locked = pick && mine?.picks?.[i] && resultOfClass(mine.picks[i].classId) && mine.picks[i].classId === pick.classId;
+          const label = ['Prima scelta · segreta fino al risultato', 'Seconda scelta', 'Terza scelta'][i];
+          if (locked) {
+            const hit = resultOfClass(pick.classId).musicalKey === pick.musicalKey;
+            return `<article class="choice-card${hit ? ' hit' : ''}"><div class="choice-top"><div class="choice-rank">${i + 1}</div><div><div class="field-label">${label}</div><b>${esc(pick.classId)}</b> · ${esc(titleOf(pick.musicalKey))} ${hit ? `<span class="status-ok">✓ +${MUSICAL_POINTS[i]} pt</span>` : '<span class="status-wait">✗ 0 pt</span>'}<div class="subtle">Bloccata: il risultato di ${esc(pick.classId)} è uscito (${esc(titleOf(resultOfClass(pick.classId).musicalKey))}).</div></div></div></article>`;
+          }
+          const classOpts = `<option value="">Scegli una classe</option>${g.classes.map(c => {
+            const taken = usedClasses.includes(c.id) && pick?.classId !== c.id;
+            const closed = Boolean(resultOfClass(c.id));
+            return `<option value="${esc(c.id)}" ${pick?.classId === c.id ? 'selected' : ''} ${taken || closed ? 'disabled' : ''}>${esc(c.name)}${closed ? ' (risultato uscito)' : ''}</option>`;
+          }).join('')}`;
+          return `<article class="choice-card"><div class="choice-top"><div class="choice-rank">${i + 1}</div><div class="field"><label>${label} · vale ${MUSICAL_POINTS[i]} pt</label>
+            <div class="pick-row"><select data-general-class="${i}" aria-label="Classe">${classOpts}</select><select data-general-musical="${i}" aria-label="Musical" ${pick?.classId ? '' : 'disabled'}>${musicalOptions(pick?.musicalKey || '')}</select></div></div></div></article>`;
+        }).join('');
+
+        const resultsGrid = g.classes.map(c => `<div class="mini-result${g.results[c.id] ? ' done' : ''}"><b>${esc(c.name)}</b><span>${g.results[c.id] ? esc(titleOf(g.results[c.id].musicalKey)) : 'in attesa'}</span></div>`).join('');
+        const positions = positionsOf(g.teams);
+        const teamsHtml = g.teams.map((t, i) => {
+          const picks = t.picks.map((p, k) => {
+            if (!p) return '';
+            if (p.hidden) return `<div class="team-choice"><span class="choice-num">${k + 1}</span><div class="grow subtle">🔒 Scelta segreta fino al risultato</div></div>`;
+            const hit = t.hits?.[k];
+            return `<div class="team-choice${hit ? ' hit' : ''}"><span class="choice-num">${k + 1}</span><div class="grow"><b>${esc(p.classId)}</b> · ${esc(titleOf(p.musicalKey))}${hit === true ? ` <span class="status-ok">✓ +${MUSICAL_POINTS[k]}</span>` : hit === false ? ' <span class="status-wait">✗</span>' : ''}</div></div>`;
+          }).join('');
+          return `<article class="team-card${t.mine ? ' mine' : ''}"><div class="team-head">${anyResult ? `<span class="rank-number">${positions[i]}</span>` : ''}${initials(t.name)}<div class="grow"><div class="person-name">${esc(t.name)}${t.mine ? ' <span class="subtle">(la tua)</span>' : ''}</div><div class="subtle">di ${esc(t.owner)}${t.ownerClass ? ` · ${esc(t.ownerClass)}` : ''}</div></div>${anyResult ? `<span class="board-score">${t.points} pt</span>` : ''}</div><div class="team-choices">${picks}</div></article>`;
+        }).join('');
+
+        view.innerHTML = `${heading('Il Fantamusical di tutti', 'Lega generale', 'Scegli fino a tre classi diverse e indovina il musical che metterà in scena ciascuna. Qui si gioca solo con i titoli: niente cast.')}
+          ${mine && anyResult ? `<div class="result-strip"><div><div class="eyebrow">La tua squadra</div><div class="result-title">${esc(mine.name)}</div></div><div class="result-points">${mine.points}<span> pt</span></div></div>` : ''}
+          <form id="general-form"><section class="panel" style="margin-bottom:14px"><div class="panel-head"><h2>La mia squadra</h2>${mine ? `<span class="subtle">Salvata ${esc(fmtDate(mine.updatedAt))}</span>` : ''}</div>
+            <div class="field" style="max-width:420px"><label for="general-name">Nome della squadra</label><input id="general-name" name="name" maxlength="40" required value="${esc(generalDraft.name)}"></div></section>
+            <div class="choice-list">${slots}</div>
+            <div class="form-footer"><span class="form-message">Puoi cambiare la squadra finché i risultati delle classi scelte non sono usciti.</span><button class="button" type="submit">Salva squadra</button></div></form>
+          <section class="panel" style="margin:18px 0 15px"><div class="panel-head"><h2>Risultati delle classi</h2><span class="subtle">${plural(Object.keys(g.results).length, 'uscito', 'usciti')} su ${g.classes.length}</span></div><div class="mini-results">${resultsGrid}</div></section>
+          <section><div class="panel-head"><h2>${anyResult ? 'Classifica' : 'Squadre in gara'}</h2><span class="subtle">${plural(g.teams.length, 'squadra', 'squadre')}</span></div>
+            ${g.teams.length ? `<div class="team-list">${teamsHtml}</div>` : '<section class="panel empty"><strong>Nessuna squadra ancora</strong>Sii il primo a schierarne una!</section>'}</section>`;
+      }
+
+      /* ---------- Leagues ---------- */
+      function renderLeagues() {
+        current = null;
+        setCrumb('Fantamusical · <strong>Le mie leghe</strong>');
+        const cards = me.leagues.map(l => `<a class="class-link" href="#/lega/${esc(l.id)}"><h3>${esc(l.name)}</h3>
+            <div class="class-meta"><span class="code">${esc(l.classId)}</span><span>${plural(l.members, 'giocatore', 'giocatori')}</span><span>${plural(l.teams, 'squadra', 'squadre')}</span></div>
+            <div class="class-meta">${l.hasResult ? (l.myPoints !== null ? `<span class="status-ok">✓ Risultato · ${l.myPoints} pt per te</span>` : '<span class="status-ok">✓ Risultato uscito</span>') : l.hasTeam ? '<span class="status-ok">Squadra schierata</span>' : '<span class="status-wait">Squadra da fare</span>'}</div></a>`).join('');
+        const accessible = me.classes.filter(c => c.access);
+        view.innerHTML = `${heading('Leghe private', 'Le mie leghe', 'Una lega è un Fantamusical tra amici su una sola classe, con il cast: si scommette anche sugli attori dei ruoli. Si entra solo con il link di invito.')}
+          ${me.leagues.length ? `<div class="class-grid">${cards}</div>` : '<section class="panel empty" style="margin-bottom:16px"><strong>Nessuna lega per ora</strong>Creane una qui sotto, oppure apri il link di invito che ti hanno mandato.</section>'}
+          <section class="panel"><div class="panel-head"><h2>Crea una lega</h2></div>
+            <form id="league-form" class="form-grid"><div class="field"><label for="league-name">Nome della lega</label><input id="league-name" name="name" maxlength="60" required placeholder="Es. Gli amici del loggione"></div>
+              <div class="field"><label for="league-class">Classe</label><select id="league-class" name="classId" required>${accessible.map(c => `<option value="${esc(c.id)}" ${c.mine ? 'selected' : ''}>${esc(c.name)}${c.mine ? ' (la tua)' : ''}</option>`).join('')}</select></div>
+              <div><button class="button" type="submit"><span class="plus">+</span> Crea lega</button></div></form>
+            <p class="subtle">Puoi creare leghe solo sulle classi a cui hai accesso. Il link della lega darà accesso alla classe a chi lo riceve: invialo solo a persone fidate.</p></section>`;
+      }
+
+      // A role holds up to 3 actors; older saves stored a single id per role.
+      const actorList = value => (Array.isArray(value) ? value : value ? [value] : []);
+      const normCast = cast => Object.fromEntries(Object.entries(cast || {}).map(([role, value]) => [role, actorList(value)]).filter(([, ids]) => ids.length));
+      const actorsNow = () => (current || classPage)?.actors || [];
+      const actorName = id => actorsNow().find(a => a.id === id)?.name || 'Attore non più in classe';
+      const officialCast = () => normCast(current?.result?.cast);
+      const isHitMusical = choice => Boolean(current?.result && choice?.musicalKey && choice.musicalKey === current.result.musicalKey);
+      const isHitActor = (choice, role, id) => isHitMusical(choice) && (officialCast()[role] || []).includes(id);
+      const LEAGUE_TABS = [['squadra', 'La mia squadra'], ['squadre', 'Squadre'], ['classifica', 'Classifica'], ['inviti', 'Inviti']];
+
+      async function openLeague(id, tab) {
+        currentTab = LEAGUE_TABS.some(([key]) => key === tab) ? tab : 'squadra';
         if (current?.id !== id) {
-          renderLoading('Apertura della classe…');
-          try { await loadClass(id); } catch (error) {
+          renderLoading('Apertura della lega…');
+          try { await loadLeague(id); } catch (error) {
             if (!session) return;
-            view.innerHTML = `<section class="panel empty"><strong>Classe non disponibile</strong>${esc(error.message)}<br><br><a class="button secondary" href="#/">Torna alle mie classi</a></section>`;
+            view.innerHTML = `<section class="panel empty"><strong>Lega non disponibile</strong>${esc(error.message)}<br><br><a class="button secondary" href="#/leghe">Torna alle mie leghe</a></section>`;
             return;
           }
         }
-        renderClass();
+        renderLeague();
       }
 
-      async function loadClass(id) {
-        current = await api('getClass', { classId: id });
-        draft = [0, 1, 2].map(i => structuredClone(current.myBallot?.[i] || { musicalKey: '', cast: {} }));
-        resultDraft = structuredClone(current.result || { musicalKey: '', cast: {} });
+      async function loadLeague(id) {
+        current = await api('getLeague', { leagueId: id });
+        const mine = current.teams.find(t => t.mine);
+        teamName = mine?.name || `Squadra di ${me.user.name}`;
+        draft = [0, 1, 2].map(i => ({ musicalKey: mine?.choices?.[i]?.musicalKey || '', cast: normCast(mine?.choices?.[i]?.cast) }));
+        resultDraft = { musicalKey: current.result?.musicalKey || '', cast: normCast(current.result?.cast) };
       }
 
-      function renderClass() {
+      function renderLeague() {
         const c = current;
-        document.getElementById('crumb').innerHTML = `<a class="inline" href="#/">Le mie classi</a> · <strong>${esc(c.name)}</strong>`;
-        const tabs = [['pronostico', 'Il mio pronostico'], ['risultato', c.result ? 'Classifica' : 'Risultato'], ['studenti', 'Studenti'], ['membri', 'Membri']]
-          .map(([key, label]) => `<button data-tab="${key}" class="${currentTab === key ? 'active' : ''}">${label}${key === 'membri' && c.requests.length ? `<span class="badge">${c.requests.length}</span>` : ''}</button>`).join('');
-        const body = { pronostico: tabBallot, risultato: tabResult, studenti: tabStudents, membri: tabMembers }[currentTab]();
-        view.innerHTML = `${heading(`Classe · <span class="code">${esc(c.id)}</span>`, c.name, `${plural(c.members.length, 'membro', 'membri')} · ${plural(c.students.length, 'studente', 'studenti')} · ${c.result ? 'risultato pubblicato' : 'pronostici aperti'}`, '<button class="button secondary small" data-action="reload">↻ Aggiorna</button>')}
+        setCrumb(`<a class="inline" href="#/leghe">Le mie leghe</a> · <strong>${esc(c.name)}</strong>`);
+        const played = c.teams.filter(t => t.hasTeam).length;
+        const tabs = LEAGUE_TABS.map(([key, label]) => `<button data-tab="${key}" class="${currentTab === key ? 'active' : ''}">${label}</button>`).join('');
+        const body = { squadra: tabMyTeam, squadre: tabTeams, classifica: tabStandings, inviti: tabInvites }[currentTab]();
+        view.innerHTML = `${heading(`Lega · classe <a class="code" href="#/classe/${esc(c.classId)}">${esc(c.classId)}</a>`, c.name, `${plural(c.teams.length, 'giocatore', 'giocatori')} · ${plural(played, 'squadra schierata', 'squadre schierate')} · ${plural(c.actors.length, 'attore', 'attori')} · ${c.result ? `risultato: ${esc(titleOf(c.result.musicalKey))}` : 'squadre aperte'}`, '<button class="button secondary small" data-action="reload">↻ Aggiorna</button>')}
           <nav class="tabs">${tabs}</nav>${body}`;
-        if (currentTab === 'membri') view.querySelector('#invite-link')?.addEventListener('focus', e => e.target.select());
+        if (currentTab === 'inviti') view.querySelector('#invite-link')?.addEventListener('focus', e => e.target.select());
       }
 
-      const musicalOptions = selected => `<option value="">Scegli un musical</option>${catalog.map(m => `<option value="${esc(m.key)}" ${m.key === selected ? 'selected' : ''}>${esc(m.title)}</option>`).join('')}${selected && !catalogByKey.has(selected) ? `<option value="${esc(selected)}" selected>${esc(selected)}</option>` : ''}`;
-      const studentOptions = (selected, placeholder) => `<option value="">${placeholder}</option>${current.students.map(s => `<option value="${esc(s.id)}" ${s.id === selected ? 'selected' : ''}>${esc(s.name)}</option>`).join('')}`;
+      // Up to MAX_ACTORS actors per role: chips for the chosen ones + a select to add another.
+      function castPicker(kind, rank, role, ids, locked, choice) {
+        const chips = ids.map(id => {
+          const hit = choice && isHitActor(choice, role, id);
+          const remove = locked ? '' : `<button type="button" class="chip-x" title="Togli" data-action="unpick" data-kind="${kind}" data-rank="${rank}" data-role="${esc(role)}" data-id="${esc(id)}">×</button>`;
+          return `<span class="student-chip${hit ? ' hit' : ''}">${hit ? '✓ ' : ''}${esc(actorName(id))}${remove}</span>`;
+        }).join('');
+        const free = actorsNow().filter(a => !ids.includes(a.id));
+        const select = !locked && ids.length < MAX_ACTORS && free.length
+          ? `<select data-pick="${kind}" data-rank="${rank}" data-role="${esc(role)}" aria-label="${esc(role)}"><option value="">${ids.length ? '+ altro attore' : 'Scegli un attore'}</option>${free.map(a => `<option value="${esc(a.id)}">${esc(a.name)}</option>`).join('')}</select>` : '';
+        return `<div class="field"><label>${esc(role)}</label><div class="actor-picks">${chips}${select}${!chips && !select ? '<span class="subtle">—</span>' : ''}</div></div>`;
+      }
 
-      function tabBallot() {
-        const closed = Boolean(current.result);
+      // Official result, shown wherever a team is shown.
+      function resultStrip(team) {
+        if (!current.result) return '';
+        const cast = Object.entries(officialCast()).map(([role, ids]) => `${esc(role)}: ${ids.map(id => esc(actorName(id))).join(', ')}`).join(' · ');
+        const points = team ? (team.hasTeam ? `<div class="result-points">${team.points}<span> pt</span></div>` : '<div class="subtle">Nessuna squadra</div>') : '';
+        return `<div class="result-strip"><div><div class="eyebrow">Risultato ufficiale · ${esc(current.classId)}</div><div class="result-title">${esc(titleOf(current.result.musicalKey))}</div>${cast ? `<div class="subtle">${cast}</div>` : ''}</div>${points}</div>`;
+      }
+
+      function tabMyTeam() {
+        const locked = Boolean(current.result);
+        const mine = current.teams.find(t => t.mine);
+        const noActors = !current.actors.length ? '<div class="notice">In questa classe non c’è ancora nessun attore registrato: per ora puoi scegliere solo i musical. Il cast si potrà comporre quando gli attori della classe entreranno nel gioco.</div>' : '';
         const cards = draft.map((choice, index) => {
           const roles = catalogByKey.get(choice.musicalKey)?.roles || [];
           const cast = !choice.musicalKey ? '<div class="subtle">Scegli un musical per comporre il cast.</div>'
             : !roles.length ? '<div class="subtle">Questo musical non ha ancora ruoli: aggiungili dal Catalogo.</div>'
-            : !current.students.length ? '<div class="subtle">Aggiungi gli studenti della classe (scheda Studenti) per assegnare i ruoli.</div>'
-            : roles.map(role => `<div class="field"><label>${esc(role)}</label><select data-rank="${index}" data-role="${esc(role)}" ${closed ? 'disabled' : ''}>${studentOptions(choice.cast?.[role] || '', 'Scegli uno studente')}</select></div>`).join('');
-          return `<article class="choice-card"><div class="choice-top"><div class="choice-rank">${index + 1}</div><div class="field"><label for="musical-${index}">${['Prima scelta', 'Seconda scelta', 'Terza scelta'][index]}</label><select id="musical-${index}" data-musical-rank="${index}" ${closed ? 'disabled' : ''}>${musicalOptions(choice.musicalKey)}</select></div></div>
-            <div class="cast-wrap"><div class="cast-heading"><h3>Cast ${index + 1}</h3><span class="subtle">${plural(roles.length, 'ruolo', 'ruoli')}</span></div><div class="cast-grid">${cast}</div></div></article>`;
+            : !current.actors.length ? '<div class="subtle">Nessun attore registrato in questa classe.</div>'
+            : roles.map(role => castPicker('team', index, role, choice.cast[role] || [], locked, choice)).join('');
+          return `<article class="choice-card${isHitMusical(choice) ? ' hit' : ''}"><div class="choice-top"><div class="choice-rank">${index + 1}</div><div class="field"><label for="musical-${index}">${['Prima scelta', 'Seconda scelta', 'Terza scelta'][index]} · ${MUSICAL_POINTS[index]} pt${isHitMusical(choice) ? ' · <span class="status-ok">✓ Musical indovinato</span>' : ''}</label><select id="musical-${index}" data-musical-rank="${index}" ${locked ? 'disabled' : ''}>${musicalOptions(choice.musicalKey)}</select></div></div>
+            <div class="cast-wrap"><div class="cast-heading"><h3>Cast ${index + 1}</h3><span class="subtle">fino a ${MAX_ACTORS} attori per ruolo</span></div><div class="cast-grid">${cast}</div></div></article>`;
         }).join('');
-        return `${closed ? '<div class="notice">Il risultato ufficiale è stato pubblicato: i pronostici sono chiusi. Guarda la classifica!</div>' : ''}
-          <form id="ballot-form"><div class="choice-list">${cards}</div>
-          <div class="form-footer"><span class="form-message">${current.myBallot ? 'Hai già inviato un pronostico: puoi modificarlo finché il risultato non viene pubblicato.' : 'Il tuo pronostico resta nascosto agli altri fino al risultato.'}</span>${closed ? '' : '<button class="button" type="submit">Salva pronostico</button>'}</div></form>`;
+        const message = locked ? (mine?.hasTeam ? 'Il risultato è uscito: la squadra non è più modificabile.' : 'Non hai schierato una squadra in questa lega.')
+          : mine?.hasTeam ? 'Squadra salvata: puoi modificarla finché il risultato non esce.' : 'Prima del risultato gli altri vedranno solo i titoli che hai scelto, non il cast.';
+        return `${resultStrip(mine)}${noActors}<form id="team-form"><section class="panel" style="margin-bottom:14px"><div class="field" style="max-width:420px"><label for="team-name">Nome della squadra</label><input id="team-name" name="name" maxlength="40" required value="${esc(teamName)}" ${locked ? 'disabled' : ''}></div></section>
+          <div class="choice-list">${cards}</div>
+          <div class="form-footer"><span class="form-message">${message}</span>${locked ? '' : '<button class="button" type="submit">Salva squadra</button>'}</div></form>`;
       }
 
-      function tabResult() {
+      function teamCard(team, position) {
+        const meta = team.hasTeam ? `di ${esc(team.owner)}${team.ownerClass ? ` · ${esc(team.ownerClass)}` : ''}${team.updatedAt ? ` · ${esc(fmtDate(team.updatedAt))}` : ''}` : 'Non ha ancora schierato una squadra';
+        const head = `<div class="team-head">${position ? `<span class="rank-number">${position}</span>` : ''}${initials(team.name || team.owner)}<div class="grow"><div class="person-name">${esc(team.name || team.owner)}${team.mine ? ' <span class="subtle">(la tua)</span>' : ''}</div><div class="subtle">${meta}</div></div>${current.result && team.hasTeam ? `<span class="board-score">${team.points} pt</span>` : ''}</div>`;
+        if (!team.hasTeam) return `<article class="team-card muted">${head}</article>`;
+        const choices = team.choices.map((choice, k) => {
+          const castEntries = Object.entries(normCast(choice.cast));
+          const cast = castEntries.map(([role, ids]) => `<span class="role-chip">${esc(role)}: ${ids.map(id => `${isHitActor(choice, role, id) ? '✓ ' : ''}${esc(actorName(id))}`).join(', ')}</span>`).join('');
+          const hiddenCast = !team.mine && !current.result ? '<div class="subtle" style="margin-top:4px">🔒 Cast visibile dopo il risultato</div>' : '';
+          return `<div class="team-choice${isHitMusical(choice) ? ' hit' : ''}"><span class="choice-num">${k + 1}</span><div class="grow"><b>${esc(titleOf(choice.musicalKey))}</b>${isHitMusical(choice) ? ' <span class="status-ok">✓</span>' : ''}${cast ? `<div class="role-list" style="margin:6px 0 0">${cast}</div>` : hiddenCast}</div></div>`;
+        }).join('');
+        return `<article class="team-card${team.mine ? ' mine' : ''}">${head}<div class="team-choices">${choices}</div></article>`;
+      }
+
+      function tabTeams() {
+        const positions = current.result ? positionsOf(current.teams) : [];
+        const played = current.teams.filter(t => t.hasTeam).length;
+        return `${resultStrip()}<p class="subtle" style="margin:0 0 12px">${played} su ${plural(current.teams.length, 'giocatore ha', 'giocatori hanno')} schierato la squadra.${current.result ? '' : ' Prima del risultato si vedono solo i titoli scelti.'}</p>
+          <div class="team-list">${current.teams.map((t, i) => teamCard(t, positions[i])).join('')}</div>`;
+      }
+
+      function resultEditor(classId) {
         const roles = catalogByKey.get(resultDraft.musicalKey)?.roles || [];
         const castFields = !resultDraft.musicalKey ? '<div class="subtle">Seleziona il musical assegnato per inserire il cast.</div>'
-          : !current.students.length ? '<div class="subtle">Aggiungi gli studenti della classe per assegnare il cast ufficiale.</div>'
-          : roles.map(role => `<div class="field"><label>${esc(role)}</label><select data-result-role="${esc(role)}">${studentOptions(resultDraft.cast?.[role] || '', 'Ruolo non assegnato')}</select></div>`).join('');
-        const resultPanel = `<section class="panel" style="margin-bottom:15px"><div class="panel-head"><h2>Esito ufficiale</h2>${current.result ? '<span class="status-ok">✓ Pubblicato</span>' : ''}</div>
+          : !actorsNow().length ? '<div class="subtle">Nessun attore registrato in questa classe: puoi pubblicare solo il musical.</div>'
+          : roles.map(role => castPicker('result', 0, role, resultDraft.cast[role] || [], false, null)).join('');
+        const result = (current || classPage)?.result;
+        return `<section class="panel" style="margin-bottom:15px"><div class="panel-head"><h2>Risultato ufficiale di ${esc(classId)}</h2>${result ? '<span class="status-ok">✓ Pubblicato</span>' : ''}</div>
+          <p class="subtle" style="margin-top:-6px">Il risultato è della classe: vale per tutte le leghe su ${esc(classId)} e per la lega generale.</p>
           <div class="result-selectors" style="grid-template-columns:1fr"><div class="field"><label for="result-musical">Musical assegnato alla classe</label><select id="result-musical">${musicalOptions(resultDraft.musicalKey)}</select></div></div>
           <div class="result-cast">${castFields}</div>
-          <div class="form-footer"><span class="form-message">${current.result ? 'Puoi correggere il risultato o riaprire i pronostici.' : 'Pubblicando il risultato i pronostici si chiudono e diventano visibili a tutti.'}</span>
-          <div style="display:flex;gap:8px">${current.result ? '<button class="button danger" data-action="reopen">Riapri pronostici</button>' : ''}<button class="button" data-action="save-result">${current.result ? 'Aggiorna risultato' : 'Pubblica risultato'}</button></div></div></section>`;
+          <div class="form-footer"><span class="form-message">${result ? 'Puoi correggere il risultato o annullarlo per riaprire le squadre.' : 'Pubblicando il risultato le squadre su questa classe si chiudono.'}</span>
+          <div style="display:flex;gap:8px">${result ? '<button class="button danger" data-action="reopen">Annulla risultato</button>' : ''}<button class="button" data-action="save-result">${result ? 'Aggiorna risultato' : 'Pubblica risultato'}</button></div></div></section>`;
+      }
 
+      function tabStandings() {
         let board;
-        if (current.standings) {
-          // Equal points share the same position ("pari merito"): 1, 1, 3…
-          const positions = current.standings.map((p, i, all) => all.findIndex(other => other.points === p.points) + 1);
-          const rows = current.standings.map((p, i) => `<div class="board-row compact" style="grid-template-columns:34px minmax(0,1fr) 75px"><span class="rank-number">${positions[i]}</span><span style="display:flex;align-items:center;gap:9px">${avatar(p)}<span class="person-name">${esc(p.name)}</span></span><span class="board-score">${p.points} pt</span></div>
-            <div class="picks">${p.hasBallot ? p.choices.map((ch, k) => `${k + 1}. <b>${esc(titleOf(ch.musicalKey))}</b>${k === p.rank ? ' ✓' : ''}`).join(' · ') : 'Nessun pronostico inviato'}</div>`).join('');
-          board = `<section class="panel" style="margin-bottom:15px"><div class="panel-head"><h2>Classifica</h2><span class="subtle">Musical: ${esc(titleOf(current.result.musicalKey))}</span></div>
-            <div class="board-row board-head compact" style="grid-template-columns:34px minmax(0,1fr) 75px"><span>#</span><span>Giocatore</span><span class="board-score">Punti</span></div>${rows}</section>`;
+        if (current.result) {
+          const positions = positionsOf(current.teams);
+          const rows = current.teams.map((t, i) => `<div class="board-row compact"><span class="rank-number">${positions[i]}</span><span style="display:flex;align-items:center;gap:9px">${initials(t.name || t.owner)}<span><span class="person-name">${esc(t.name || t.owner)}</span><span class="subtle"> · ${esc(t.owner)}</span></span></span><span class="board-score">${t.points} pt</span></div>
+            <div class="picks">${t.hasTeam ? t.choices.map((ch, k) => `${k + 1}. <b>${esc(titleOf(ch.musicalKey))}</b>${k === t.rank ? ' ✓' : ''}`).join(' · ') : 'Nessuna squadra'}</div>`).join('');
+          board = `${resultStrip(current.teams.find(t => t.mine))}<section class="panel" style="margin-bottom:15px"><div class="panel-head"><h2>Classifica</h2></div>
+            <div class="board-row board-head compact"><span>#</span><span>Squadra</span><span class="board-score">Punti</span></div>${rows}</section>`;
         } else {
-          const done = current.members.filter(m => m.hasBallot).length;
-          board = `<section class="panel" style="margin-bottom:15px"><div class="panel-head"><h2>Chi ha giocato</h2><span class="subtle">${done} su ${current.members.length}</span></div>
-            ${current.members.map(m => `<div class="person-row">${avatar(m)}<div class="grow person-name">${esc(m.name)}</div>${m.hasBallot ? '<span class="status-ok">✓ Pronostico inviato</span>' : '<span class="status-wait">Non ancora</span>'}</div>`).join('')}</section>`;
+          const played = current.teams.filter(t => t.hasTeam).length;
+          board = `<section class="panel empty" style="margin-bottom:15px"><strong>La classifica arriva con il risultato</strong>${played} su ${plural(current.teams.length, 'giocatore ha', 'giocatori hanno')} già schierato la squadra. Quando musical e cast di ${esc(current.classId)} sono ufficiali, pubblica il risultato qui sotto.</section>`;
         }
-        return `${current.result ? board + resultPanel : resultPanel + board}
-          <div class="score-legend"><strong>Punteggio:</strong> musical indovinato: 6 punti se era la prima scelta, 4 la seconda, 2 la terza. Cast: fino a 12 punti in proporzione ai ruoli assegnati correttamente.</div>`;
+        return `${board}${resultEditor(current.classId)}<div class="score-legend"><strong>Punteggio:</strong> musical indovinato: 6, 4 o 2 punti secondo la scelta. Cast: fino a 12 punti, pesati sulla difficoltà di ogni ruolo (vedi Regolamento).</div>`;
       }
 
-      function tabStudents() {
-        return `<section class="panel"><div class="panel-head"><h2>Studenti della classe</h2><span class="subtle">${plural(current.students.length, 'studente', 'studenti')}</span></div>
-          <p class="subtle" style="margin-top:-6px">Sono gli interpreti tra cui scegliere il cast. Tutti i membri possono modificarli.</p>
-          <div class="student-list">${current.students.map(s => `<span class="student-chip">${esc(s.name)}<button class="chip-x" title="Rimuovi" data-action="remove-student" data-id="${esc(s.id)}">×</button></span>`).join('') || '<span class="subtle">Nessuno studente ancora.</span>'}</div>
-          <form id="student-form" class="inline-form"><input name="name" maxlength="80" placeholder="Nome e cognome dello studente" required><button class="button" type="submit">Aggiungi</button></form></section>`;
+      function tabInvites() {
+        const link = `${location.origin}${location.pathname}?lega=${current.inviteCode}`;
+        return `<section class="panel" style="margin-bottom:16px"><div class="panel-head"><h2>Invita amici</h2></div>
+            <div class="field"><label for="invite-link">Link di invito alla lega</label><div class="link-box"><input id="invite-link" readonly value="${esc(link)}"><button class="button small" data-action="copy-link">Copia</button></div></div>
+            <p class="subtle">Chi apre il link entra nella lega e ottiene accesso alla classe ${esc(current.classId)}: potrà vederne gli attori e scommettere sui loro ruoli. Invialo solo a persone fidate. <a class="inline" href="#" data-action="new-link">Genera un nuovo link</a> per disattivare quello vecchio.</p></section>
+          <section class="panel"><div class="form-footer" style="margin-top:0"><span class="form-message">Uscendo dalla lega la tua squadra viene eliminata. Se esce l'ultimo giocatore, la lega viene cancellata.</span><button class="button danger small" data-action="leave">Esci dalla lega</button></div></section>`;
       }
 
-      function tabMembers() {
-        const link = `${location.origin}${location.pathname}?join=${current.inviteCode}`;
-        const requests = current.requests.length ? current.requests.map(r => `<div class="person-row">${avatar(r)}<div class="grow"><div class="person-name">${esc(r.name)}</div><div class="subtle">${esc(r.email)}</div></div>
-            <div class="actions"><button class="button small" data-action="approve" data-sub="${esc(r.sub)}">Approva</button><button class="button secondary small" data-action="reject" data-sub="${esc(r.sub)}">Rifiuta</button></div></div>`).join('')
-          : '<p class="subtle">Nessuna richiesta in attesa.</p>';
-        return `<div class="two-col" style="margin-bottom:16px">
-            <section class="panel"><div class="panel-head"><h2>Invita amici</h2></div>
-              <div class="field"><label for="invite-link">Link di invito (chi lo apre entra subito)</label><div class="link-box"><input id="invite-link" readonly value="${esc(link)}"><button class="button small" data-action="copy-link">Copia</button></div></div>
-              <p class="subtle">Chi non ha il link può trovare la classe nell'elenco e chiedere di entrare: le richieste arrivano qui accanto. <a class="inline" href="#" data-action="new-link">Genera un nuovo link</a> per disattivare quello vecchio.</p></section>
-            <section class="panel"><div class="panel-head"><h2>Richieste di accesso</h2>${current.requests.length ? `<span class="badge">${current.requests.length}</span>` : ''}</div>${requests}</section>
+      /* ---------- Classes ---------- */
+      function renderClasses() {
+        classPage = null;
+        setCrumb('Fantamusical · <strong>Classi</strong>');
+        const rows = me.classes.map(c => {
+          const status = c.mine ? '<span class="status-ok">La tua classe</span>'
+            : c.access ? '<span class="status-ok">Hai accesso</span>'
+            : c.pending ? `<span class="status-wait">Richiesta inviata</span><button class="button secondary small" data-action="cancel-request" data-id="${esc(c.id)}">Annulla</button>`
+            : `<button class="button small" data-action="request" data-id="${esc(c.id)}">Chiedi accesso</button>`;
+          const open = c.access ? `<a class="button secondary small" href="#/classe/${esc(c.id)}">Apri</a>` : '';
+          return `<div class="person-row"><span class="choice-rank" style="width:42px;height:42px;font-size:13px">${esc(c.name)}</span><div class="grow"><div class="person-name">${esc(c.name)}${c.requests ? ` <span class="badge" title="Richieste di accesso">${c.requests}</span>` : ''}</div>
+            <div class="subtle">${plural(c.actors, 'attore registrato', 'attori registrati')} · ${c.resultMusical ? `risultato: ${esc(titleOf(c.resultMusical))}` : 'risultato in attesa'}</div></div><div class="actions" style="align-items:center">${status}${open}</div></div>`;
+        }).join('');
+        view.innerHTML = `${heading('La scuola', 'Classi', 'Le classi sono fisse. Ognuno è attore della propria classe; per vedere gli attori di un’altra classe e scommettere sui loro ruoli serve l’accesso, che approvano gli attori di quella classe (oppure il link di una lega).')}
+          <section class="panel">${rows}</section>`;
+      }
+
+      async function openClassPage(id) {
+        setCrumb(`<a class="inline" href="#/classi">Classi</a> · <strong>${esc(id)}</strong>`);
+        renderLoading('Apertura della classe…');
+        try {
+          classPage = await api('getClass', { classId: id });
+          current = null;
+          resultDraft = { musicalKey: classPage.result?.musicalKey || '', cast: normCast(classPage.result?.cast) };
+        } catch (error) {
+          if (!session) return;
+          view.innerHTML = `<section class="panel empty"><strong>Classe non disponibile</strong>${esc(error.message)}<br><br><a class="button secondary" href="#/classi">Torna alle classi</a></section>`;
+          return;
+        }
+        renderClassPage();
+      }
+
+      function renderClassPage() {
+        const c = classPage;
+        const requests = c.isActor ? `<section class="panel" style="margin-bottom:16px"><div class="panel-head"><h2>Richieste di accesso</h2>${c.requests.length ? `<span class="badge">${c.requests.length}</span>` : ''}</div>
+            <p class="subtle" style="margin-top:-6px">Chi approvi potrà vedere gli attori di ${esc(c.name)}, te compreso, e scommettere sui vostri ruoli.</p>
+            ${c.requests.length ? c.requests.map(r => `<div class="person-row">${initials(r.name)}<div class="grow"><div class="person-name">${esc(r.name)}</div><div class="subtle">attore di ${esc(r.classId)}</div></div>
+              <div class="actions"><button class="button small" data-action="approve" data-actor="${esc(r.actorId)}">Approva</button><button class="button secondary small" data-action="reject" data-actor="${esc(r.actorId)}">Rifiuta</button></div></div>`).join('') : '<p class="subtle">Nessuna richiesta in attesa.</p>'}</section>` : '';
+        view.innerHTML = `${heading(c.isActor ? 'La tua classe' : 'Classe', c.name, `${plural(c.actors.length, 'attore registrato', 'attori registrati')}${c.result ? ` · risultato: ${esc(titleOf(c.result.musicalKey))}` : ''}`)}
+          ${requests}
+          <div class="two-col" style="margin-bottom:16px">
+            <section class="panel"><div class="panel-head"><h2>Attori</h2></div>
+              <div class="student-list">${c.actors.map(a => `<span class="student-chip">${esc(a.name)}</span>`).join('') || '<span class="subtle">Nessun attore registrato.</span>'}</div>
+              <p class="subtle">Gli attori si aggiungono da soli, scegliendo questa classe al primo accesso.</p></section>
+            <section class="panel"><div class="panel-head"><h2>Le mie leghe su ${esc(c.name)}</h2></div>
+              ${c.leagues.length ? c.leagues.map(l => `<div class="person-row"><div class="grow"><a class="inline person-name" href="#/lega/${esc(l.id)}">${esc(l.name)}</a><div class="subtle">${plural(l.members, 'giocatore', 'giocatori')}</div></div></div>`).join('') : '<p class="subtle">Non partecipi a leghe su questa classe.</p>'}
+              <a class="button secondary small" href="#/leghe">Crea una lega</a></section>
           </div>
-          <section class="panel"><div class="panel-head"><h2>Membri</h2><span class="subtle">${plural(current.members.length, 'membro', 'membri')}</span></div>
-            ${current.members.map(m => `<div class="person-row">${avatar(m)}<div class="grow person-name">${esc(m.name)}${m.sub === me.user.sub ? ' <span class="subtle">(tu)</span>' : ''}</div></div>`).join('')}
-            <div class="form-footer"><span class="form-message">Se esce l'ultimo membro, la classe viene eliminata.</span><button class="button danger small" data-action="leave">Esci dalla classe</button></div></section>`;
+          ${resultEditor(c.id)}`;
       }
 
+      /* ---------- Rules ---------- */
       function renderRules() {
-        if (me) current = null;
-        document.getElementById('crumb').innerHTML = 'Fantamusical · <strong>Regolamento</strong>';
+        if (me) { current = null; classPage = null; }
+        setCrumb('Fantamusical · <strong>Regolamento</strong>');
         const section = (num, title, body) => `<div class="step"><div class="step-num">${num}</div><div><h3 style="font:19px/1.25 var(--serif)">${title}</h3>${body}</div></div>`;
         const p = text => `<p>${text}</p>`;
-        view.innerHTML = `${heading('Le regole del gioco', 'Regolamento', 'Come si partecipa, come si gioca e come si contano i punti.', me ? '' : '<a class="button secondary" href="#/">← Torna all’accesso</a>')}
+        view.innerHTML = `${heading('Le regole del gioco', 'Regolamento', 'Come si entra, come si gioca e come si contano i punti.', me ? '' : '<a class="button secondary" href="#/">← Torna all’accesso</a>')}
           <section class="panel rules" style="margin-bottom:16px"><div class="steps">
-            ${section(1, 'Lo scopo', p('Ogni classe della scuola mette in scena un musical. Il tuo compito è indovinare <b>quale musical</b> sarà assegnato alla classe e <b>quali studenti</b> interpreteranno i ruoli principali.'))}
-            ${section(2, 'Come si partecipa', p('Accedi con il tuo account Google. In una classe si entra in due modi:') + `<ul>
-              <li><b>Link di invito</b>: chi ha il link entra subito e può giocare.</li>
-              <li><b>Richiesta di accesso</b>: nella pagina <i>Le mie classi</i> trovi l’elenco delle altre classi. Clicchi <i>Chiedi di entrare</i> e un membro della classe approva la richiesta.</li></ul>` + p('Puoi giocare in tutte le classi in cui entri. <b>Ogni classe è un Fantamusical a sé</b>, con i suoi membri, i suoi pronostici e la sua classifica. Tutti vedono il nome delle classi, ma pronostici, studenti e classifica li vede solo chi ne fa parte.'))}
-            ${section(3, 'Il pronostico', `<ul>
-              <li>Per ogni classe scegli <b>fino a 3 musical diversi</b>, in ordine: prima, seconda e terza scelta.</li>
-              <li>Per ciascun musical puoi comporre il <b>cast</b>, assegnando i ruoli agli studenti della classe.</li>
-              <li>Puoi modificare il pronostico quante volte vuoi, <b>finché non viene pubblicato il risultato</b>.</li>
-              <li>Il tuo pronostico resta <b>nascosto agli altri</b> fino al risultato. Dopo, tutti vedono le scelte di tutti.</li></ul>`)}
-            ${section(4, 'Il punteggio', `<ul>
-              <li><b>Musical indovinato</b>: 6 punti se era la tua prima scelta, 4 se era la seconda, 2 se era la terza. Se il musical non è tra le tue scelte, prendi 0 punti per quella classe.</li>
-              <li><b>Cast</b>: conta solo il cast del musical indovinato. Vale fino a <b>12 punti</b>, in proporzione ai ruoli indovinati: 12 × ruoli giusti ÷ ruoli assegnati nel cast ufficiale. I ruoli non assegnati nel risultato ufficiale non contano.</li>
-              <li>Massimo <b>18 punti</b> per classe. I punti sono arrotondati a un decimale.</li></ul>
-              <div class="score-legend" style="margin:10px 0 4px"><strong>Esempio:</strong> il risultato è <i>Wicked</i> con 4 ruoli assegnati. Avevi messo <i>Wicked</i> come seconda scelta (<b>4 punti</b>) e hai indovinato 3 ruoli su 4 (12 × 3 ÷ 4 = <b>9 punti</b>): totale <b>13 punti</b>.</div>`)}
-            ${section(5, 'Il risultato ufficiale', p('Qualsiasi membro della classe può inserire il musical assegnato e il cast ufficiale. Quando il risultato viene pubblicato, <b>i pronostici si chiudono</b> e compare la classifica.') + p('Se c’è un errore, il risultato si può correggere oppure annullare con <i>Riapri pronostici</i>: in quel caso i pronostici tornano modificabili e visibili solo ai loro autori.'))}
-            ${section(6, 'La classifica', p('Ogni classe ha la sua classifica, ordinata per punti. A parità di punti i giocatori sono <b>a pari merito</b> e occupano la stessa posizione.'))}
-            ${section(7, 'Il catalogo', p('Il catalogo dei musical è comune a tutte le classi. Se manca un titolo o un personaggio, chiunque può aggiungerlo dalla pagina Catalogo. Solo i musical con ruoli nel catalogo permettono di comporre il cast.'))}
-            ${section(8, 'Fair play', `<ul>
-              <li>Pubblica il risultato solo quando il musical e il cast sono <b>ufficiali</b>.</li>
-              <li>Non riaprire i pronostici per cambiare le tue scelte dopo aver visto quelle degli altri.</li>
-              <li>Invita solo persone che conosci: chi ha il link entra senza approvazione. Se il link finisce nelle mani sbagliate, generane uno nuovo dalla scheda Membri.</li></ul>`)}
+            ${section(1, 'Lo scopo', p('Ogni classe della scuola (MerA, MerB, MerC, GioA, GioB, VenA, VenB, SabA, SabB) mette in scena un musical. Il gioco è indovinare <b>quale musical</b> toccherà a ogni classe e <b>chi</b> interpreterà i ruoli principali.'))}
+            ${section(2, 'Entrare in scena (e il consenso)', p('Al primo accesso con Google scegli <b>la tua classe</b> e il <b>nome</b> con cui comparirai. Così diventi un <b>attore</b> della tua classe: è l’unico modo per far parte di una classe. Nessuno può aggiungere il nome di un’altra persona.') + p('Comparire come attore è la condizione per giocare: accetti che chi ha accesso alla tua classe scommetta sui ruoli che ti verranno assegnati, e in cambio puoi scommettere sui ruoli degli altri. Puoi cambiare nome o classe dal profilo, oppure ritirare il consenso eliminando il profilo.'))}
+            ${section(3, 'Accesso alle classi', `<ul>
+              <li>Hai sempre accesso alla <b>tua classe</b>.</li>
+              <li>Per un’altra classe puoi <b>chiedere l’accesso</b> dalla pagina <i>Classi</i>: decidono gli attori di quella classe.</li>
+              <li>Anche il <b>link di una lega</b> dà accesso alla classe della lega.</li>
+              <li>Con l’accesso vedi gli attori della classe, puoi creare leghe su di essa e inserirne il risultato.</li></ul>`)}
+            ${section(4, 'La lega generale', `<ul>
+              <li>È il Fantamusical di tutti: partecipa chiunque abbia fatto il primo accesso, senza bisogno di accessi alle classi.</li>
+              <li>La squadra ha un <b>nome</b> e fino a <b>3 scelte</b>: ognuna è una <b>classe diversa</b> con il musical che pensi metterà in scena. Solo titoli, niente cast.</li>
+              <li>Ogni scelta indovinata vale <b>6 punti</b> se è la prima, <b>4</b> la seconda, <b>2</b> la terza. Massimo 12 punti.</li>
+              <li>Gli altri vedono il nome della squadra e la seconda e terza scelta. La <b>prima scelta resta segreta</b> finché non esce il risultato della sua classe.</li>
+              <li>Puoi modificare la squadra quando vuoi, ma una scelta su una classe il cui risultato è uscito resta bloccata, e non puoi scegliere classi il cui risultato è già uscito.</li></ul>`)}
+            ${section(5, 'Le leghe', `<ul>
+              <li>Una lega è un Fantamusical privato tra amici su <b>una sola classe</b>. La crea chi ha accesso a quella classe, e si entra solo con il <b>link di invito</b>.</li>
+              <li>La squadra ha un nome, fino a <b>3 musical diversi</b> in ordine di preferenza e, per ciascuno, il <b>cast</b>: a ogni ruolo assegni da 1 a 3 attori della classe.</li>
+              <li>Prima del risultato gli altri vedono solo i <b>titoli</b> che hai scelto; il cast si scopre al risultato.</li>
+              <li>La squadra si può modificare finché non esce il risultato della classe.</li></ul>`)}
+            ${section(6, 'Il punteggio delle leghe', `<ul>
+              <li><b>Musical</b>: 6, 4 o 2 punti se il musical della classe era la tua prima, seconda o terza scelta. Se non è tra le tue scelte prendi 0.</li>
+              <li><b>Cast</b>: conta solo il cast del musical indovinato e vale fino a <b>12 punti</b>. Per ogni ruolo si confrontano i tuoi attori con quelli ufficiali: il ruolo vale <i>attori indovinati ÷ attori diversi in totale</i> (i tuoi più quelli ufficiali). Indovinare esattamente vale pieno; aggiungere attori “per sicurezza” abbassa il valore.</li>
+              <li>I ruoli <b>non pesano tutti uguale</b>: un ruolo vale di più quanto è più difficile indovinarlo a caso, cioè quanti più attori ha la classe rispetto agli attori ufficiali di quel ruolo (peso = log₂(attori della classe ÷ attori del ruolo)). Un ruolo con un solo interprete pesa più di uno in alternanza.</li>
+              <li>Alla fine il cast viene sempre riportato su <b>12 punti</b>: il massimo è lo stesso per tutti, qualunque sia il numero di attori della classe o di ruoli del musical. Massimo totale <b>18 punti</b>, arrotondati a un decimale.</li></ul>
+              <div class="score-legend" style="margin:10px 0 4px"><strong>Esempio:</strong> classe con 16 attori, risultato <i>Wicked</i>: Elphaba = Giulia (1 interprete, peso log₂16 = 4), Glinda = Sara e Marta (2 interpreti, peso log₂8 = 3). Avevi <i>Wicked</i> come seconda scelta (<b>4 punti</b>), Elphaba = Giulia (ruolo pieno: 1) e Glinda = Sara e Chiara (1 giusta su 3 attrici diverse: 1/3). Cast = 12 × (4×1 + 3×⅓) ÷ (4+3) = 12 × 5/7 ≈ <b>8,6 punti</b>. Totale <b>12,6 punti</b>.</div>`)}
+            ${section(7, 'Il risultato ufficiale', p('Il risultato è <b>della classe</b>: musical assegnato e cast ufficiale (fino a 3 attori per ruolo). Lo inserisce chiunque abbia accesso alla classe, dalla pagina della classe o dalla scheda <i>Classifica</i> di una lega. Vale per tutte le leghe su quella classe e per la lega generale. Si può correggere o annullare: annullandolo, le squadre tornano modificabili.'))}
+            ${section(8, 'Classifiche', p('Ogni lega ha la sua classifica, e la lega generale la sua. A parità di punti si è <b>a pari merito</b> e si occupa la stessa posizione.'))}
+            ${section(9, 'Il catalogo', p('Il catalogo dei musical è comune a tutti. Se manca un titolo o un personaggio, chiunque può aggiungerlo dalla pagina Catalogo. Solo i musical con ruoli nel catalogo permettono di comporre il cast.'))}
+            ${section(10, 'Fair play e privacy', `<ul>
+              <li>Pubblica un risultato solo quando musical e cast sono <b>ufficiali</b>, e non annullarlo per cambiare la tua squadra.</li>
+              <li>Approva l’accesso alla tua classe e invia i link delle leghe solo a persone fidate: chi entra vede i nomi degli attori. Se un link finisce nelle mani sbagliate, generane uno nuovo.</li>
+              <li>Nel gioco compari solo con il nome che hai scelto. L’email di Google non viene mostrata agli altri giocatori.</li></ul>`)}
           </div></section>`;
       }
 
+      /* ---------- Catalogue page ---------- */
       function renderCatalog() {
-        current = null;
-        document.getElementById('crumb').innerHTML = 'Fantamusical · <strong>Catalogo</strong>';
+        current = null; classPage = null;
+        setCrumb('Fantamusical · <strong>Catalogo</strong>');
         const cards = catalog.map(item => `<article class="catalog-card" data-search="${esc(normalizeSearch([item.title, ...item.roles].join(' ')))}"><div class="panel-head"><div><h3>${esc(item.title)}</h3><span class="subtle">${plural(item.roles.length, 'ruolo', 'ruoli')}</span></div></div>
           <div class="role-list">${item.roles.map(role => `<span class="role-chip">${esc(role)}</span>`).join('') || '<span class="subtle">Nessun ruolo</span>'}</div>
           <form class="inline-form" data-add-role="${esc(item.key)}"><input name="role" maxlength="80" aria-label="Nuovo personaggio" placeholder="Aggiungi personaggio" required><button class="button secondary small" type="submit">Aggiungi ruolo</button></form></article>`).join('');
-        view.innerHTML = `${heading('Catalogo condiviso', 'Musical e personaggi', 'Il catalogo è comune a tutte le classi. Aggiungi i titoli e i ruoli che mancano.')}
+        view.innerHTML = `${heading('Catalogo condiviso', 'Musical e personaggi', 'Il catalogo è comune a tutti. Aggiungi i titoli e i ruoli che mancano.')}
           <section class="panel" style="margin-bottom:16px"><div class="panel-head"><h2>Nuovo musical</h2></div><form id="musical-form" class="form-grid"><div class="field"><label for="new-title">Titolo</label><input id="new-title" name="title" maxlength="120" placeholder="Nome del musical" required></div><div class="field"><label for="new-roles">Personaggi</label><input id="new-roles" name="roles" placeholder="Es. Maria, Tony, Anita (facoltativo)"></div><div><button class="button" type="submit"><span class="plus">+</span> Aggiungi al catalogo</button></div></form></section>
           <div class="field" style="margin-bottom:12px"><label for="catalog-search">Cerca nel catalogo · ${catalog.length} musical</label><input id="catalog-search" type="search" placeholder="Titolo o personaggio" value="${esc(catalogQuery)}"></div>
           <div class="catalog-grid">${cards}</div><div id="catalog-none" class="panel empty" hidden><strong>Nessun risultato</strong>Puoi aggiungere il musical mancante qui sopra.</div>`;
@@ -899,51 +1127,64 @@
       }
 
       /* ---------- Events ---------- */
+      const rerenderResultArea = () => (current ? renderLeague() : renderClassPage());
+      const resultClassId = () => current ? current.classId : classPage.id;
+      const reloadResultArea = async () => { if (current) { await loadLeague(current.id); renderLeague(); } else { await openClassPage(classPage.id); } };
+
       document.addEventListener('click', event => {
         const go = event.target.closest('[data-go]');
         if (go) { location.hash = go.dataset.go; return; }
         const tab = event.target.closest('[data-tab]');
-        if (tab && current) { history.replaceState(null, '', `#/classe/${current.id}/${tab.dataset.tab}`); currentTab = tab.dataset.tab; renderClass(); return; }
+        if (tab && current) { history.replaceState(null, '', `#/lega/${current.id}/${tab.dataset.tab}`); currentTab = tab.dataset.tab; renderLeague(); return; }
         const button = event.target.closest('[data-action]');
         if (!button) return;
         event.preventDefault();
         const action = button.dataset.action;
         if (action === 'logout') return signOut(false);
         if (action === 'retry') return boot();
+        if (action === 'unpick') {
+          const cast = button.dataset.kind === 'result' ? resultDraft.cast : draft[Number(button.dataset.rank)].cast;
+          const role = button.dataset.role;
+          cast[role] = (cast[role] || []).filter(id => id !== button.dataset.id);
+          if (!cast[role].length) delete cast[role];
+          rerenderResultArea(); return;
+        }
         if (action === 'copy-link') {
           const input = document.getElementById('invite-link');
           navigator.clipboard?.writeText(input.value).then(() => toast('Link copiato.'), () => { input.select(); toast('Seleziona e copia il link.'); });
           return;
         }
-        const reloadClass = async () => { await loadClass(current.id); renderClass(); };
         const handlers = {
-          'reload': reloadClass,
+          'reload': async () => { await loadLeague(current.id); renderLeague(); },
           'request': async () => {
-            const res = await api('requestAccess', { classId: button.dataset.id });
-            await refreshMe();
-            if (res.member) { location.hash = `#/classe/${res.id}`; return; }
-            renderHome(); toast(`Richiesta inviata a ${res.name}.`);
+            const res = await api('requestClassAccess', { classId: button.dataset.id });
+            await refreshMe(); renderClasses();
+            toast(res.access ? 'Hai già accesso a questa classe.' : 'Richiesta inviata agli attori della classe.');
           },
-          'cancel-request': async () => { await api('cancelRequest', { classId: button.dataset.id }); await refreshMe(); renderHome(); toast('Richiesta annullata.'); },
-          'remove-student': async () => { current.students = await api('removeStudent', { classId: current.id, studentId: button.dataset.id }); renderClass(); },
-          'approve': async () => { await api('answerRequest', { classId: current.id, sub: button.dataset.sub, approve: true }); await reloadClass(); toast('Richiesta approvata.'); },
-          'reject': async () => { await api('answerRequest', { classId: current.id, sub: button.dataset.sub, approve: false }); await reloadClass(); toast('Richiesta rifiutata.'); },
+          'cancel-request': async () => { await api('cancelClassRequest', { classId: button.dataset.id }); await refreshMe(); renderClasses(); toast('Richiesta annullata.'); },
+          'approve': async () => { await api('answerClassRequest', { classId: classPage.id, actorId: button.dataset.actor, approve: true }); await openClassPage(classPage.id); toast('Accesso approvato.'); },
+          'reject': async () => { await api('answerClassRequest', { classId: classPage.id, actorId: button.dataset.actor, approve: false }); await openClassPage(classPage.id); toast('Richiesta rifiutata.'); },
           'new-link': async () => {
             if (!confirm('Il link attuale smetterà di funzionare. Continuare?')) return;
-            current.inviteCode = (await api('newInviteLink', { classId: current.id })).inviteCode; renderClass(); toast('Nuovo link generato.');
+            current.inviteCode = (await api('newLeagueLink', { leagueId: current.id })).inviteCode; renderLeague(); toast('Nuovo link generato.');
           },
           'leave': async () => {
-            if (!confirm(`Vuoi davvero uscire da ${current.name}? Il tuo pronostico verrà eliminato.`)) return;
-            await api('leaveClass', { classId: current.id }); current = null; await refreshMe(); location.hash = '#/'; toast('Sei uscito dalla classe.');
+            if (!confirm(`Vuoi davvero uscire da ${current.name}? La tua squadra verrà eliminata.`)) return;
+            await api('leaveLeague', { leagueId: current.id }); current = null; await refreshMe(); location.hash = '#/leghe'; toast('Sei uscito dalla lega.');
           },
           'save-result': async () => {
             if (!resultDraft.musicalKey) { toast('Seleziona il musical assegnato.'); return; }
-            if (!current.result && !confirm('Pubblicando il risultato i pronostici si chiudono e diventano visibili a tutti. Continuare?')) return;
-            await api('saveResult', { classId: current.id, result: resultDraft }); await reloadClass(); toast('Risultato pubblicato. Classifica aggiornata.');
+            const had = (current || classPage).result;
+            if (!had && !confirm('Pubblicando il risultato le squadre su questa classe si chiudono e vengono calcolati i punti. Continuare?')) return;
+            await api('saveClassResult', { classId: resultClassId(), result: resultDraft }); await reloadResultArea(); general = null; toast('Risultato pubblicato.');
           },
           'reopen': async () => {
-            if (!confirm('Il risultato verrà cancellato e i pronostici torneranno modificabili. Continuare?')) return;
-            await api('saveResult', { classId: current.id, result: null }); await reloadClass(); toast('Pronostici riaperti.');
+            if (!confirm('Il risultato verrà cancellato e le squadre su questa classe torneranno modificabili. Continuare?')) return;
+            await api('saveClassResult', { classId: resultClassId(), result: null }); await reloadResultArea(); general = null; toast('Risultato annullato.');
+          },
+          'delete-profile': async () => {
+            if (!confirm('Eliminare il profilo? Sparirai dagli attori della tua classe e verranno cancellate le tue squadre e la partecipazione alle leghe. L’operazione non si può annullare.')) return;
+            await api('deleteProfile'); toast('Profilo eliminato.'); signOut(false);
           }
         };
         if (handlers[action]) withBusy(button, handlers[action]);
@@ -951,26 +1192,40 @@
 
       view.addEventListener('input', event => {
         if (event.target.id === 'catalog-search') { catalogQuery = event.target.value; filterCatalog(); }
-        if (event.target.id === 'class-search') {
-          const query = normalizeSearch(event.target.value.trim());
-          let visible = 0;
-          view.querySelectorAll('[data-class-name]').forEach(row => { row.hidden = Boolean(query) && !matchesQuery(row.dataset.className, query); if (!row.hidden) visible++; });
-          document.getElementById('class-none').hidden = visible > 0;
-        }
+        if (event.target.id === 'general-name' && generalDraft) generalDraft.name = event.target.value;
+        if (event.target.id === 'team-name') teamName = event.target.value;
       });
 
       view.addEventListener('change', event => {
         const target = event.target;
+        if (target.dataset.generalClass !== undefined) {
+          const i = Number(target.dataset.generalClass);
+          generalDraft.picks[i] = target.value ? { classId: target.value, musicalKey: generalDraft.picks[i]?.musicalKey || '' } : null;
+          renderGeneral(); return;
+        }
+        if (target.dataset.generalMusical !== undefined) {
+          const i = Number(target.dataset.generalMusical);
+          if (generalDraft.picks[i]) generalDraft.picks[i].musicalKey = target.value;
+          return;
+        }
         if (target.dataset.musicalRank !== undefined) {
           const rank = Number(target.dataset.musicalRank);
           const roles = catalogByKey.get(target.value)?.roles || [];
           const oldCast = draft[rank].cast || {};
           draft[rank] = { musicalKey: target.value, cast: Object.fromEntries(roles.filter(role => oldCast[role]).map(role => [role, oldCast[role]])) };
-          renderClass(); return;
+          renderLeague(); return;
         }
-        if (target.dataset.rank !== undefined) { draft[Number(target.dataset.rank)].cast[target.dataset.role] = target.value; return; }
-        if (target.id === 'result-musical') { resultDraft = { musicalKey: target.value, cast: {} }; renderClass(); return; }
-        if (target.dataset.resultRole !== undefined) resultDraft.cast[target.dataset.resultRole] = target.value;
+        if (target.dataset.pick && target.value) {
+          const cast = target.dataset.pick === 'result' ? resultDraft.cast : draft[Number(target.dataset.rank)].cast;
+          const role = target.dataset.role;
+          cast[role] = [...new Set([...(cast[role] || []), target.value])].slice(0, MAX_ACTORS);
+          rerenderResultArea(); return;
+        }
+        if (target.id === 'result-musical') {
+          const roles = catalogByKey.get(target.value)?.roles || [];
+          resultDraft = { musicalKey: target.value, cast: Object.fromEntries(roles.filter(role => resultDraft.cast[role]).map(role => [role, resultDraft.cast[role]])) };
+          rerenderResultArea();
+        }
       });
 
       view.addEventListener('submit', event => {
@@ -978,21 +1233,33 @@
         const form = event.target;
         const button = form.querySelector('button[type="submit"]');
         const data = new FormData(form);
-        if (form.id === 'create-class-form') return withBusy(button, async () => {
-          const room = await api('createClass', { name: data.get('name') });
-          await refreshMe(); location.hash = `#/classe/${room.id}/membri`; toast('Classe creata! Invita gli amici con il link.');
+        if (form.id === 'profile-form') return withBusy(button, async () => {
+          const first = !me.onboarded;
+          await api('saveProfile', { name: data.get('name'), classId: data.get('classId'), consent: data.get('consent') === 'on' });
+          await refreshMe(); general = null;
+          toast(first ? `Benvenuto in scena, ${me.user.name}!` : 'Profilo aggiornato.');
+          await consumePendingJoin();
+          const target = location.hash.startsWith('#/lega/') ? location.hash : '#/';
+          if (location.hash === target) route(); else location.hash = target;
         });
-        if (form.id === 'ballot-form') return withBusy(button, async () => {
+        if (form.id === 'general-form') return withBusy(button, async () => {
+          const picks = generalDraft.picks.map(p => (p && p.classId && p.musicalKey ? p : null));
+          if (generalDraft.picks.some(p => p && p.classId && !p.musicalKey)) { toast('Scegli il musical per ogni classe selezionata.'); return; }
+          if (!picks.some(Boolean)) { toast('Scegli almeno una classe e il suo musical.'); return; }
+          await api('saveGeneralTeam', { name: data.get('name'), picks });
+          await loadGeneral(); renderGeneral(); toast('Squadra salvata.');
+        });
+        if (form.id === 'league-form') return withBusy(button, async () => {
+          const league = await api('createLeague', { name: data.get('name'), classId: data.get('classId') });
+          await refreshMe(); location.hash = `#/lega/${league.id}/inviti`; toast('Lega creata! Invita gli amici con il link.');
+        });
+        if (form.id === 'team-form') return withBusy(button, async () => {
           const choices = draft.filter(choice => choice.musicalKey);
           if (!choices.length) { toast('Scegli almeno un musical.'); return; }
           if (new Set(choices.map(c => c.musicalKey)).size !== choices.length) { toast('Scegli musical diversi.'); return; }
-          current.myBallot = await api('saveBallot', { classId: current.id, choices });
-          current.members.forEach(m => { if (m.sub === me.user.sub) m.hasBallot = true; });
-          renderClass(); toast('Pronostico salvato.');
-        });
-        if (form.id === 'student-form') return withBusy(button, async () => {
-          current.students = await api('addStudent', { classId: current.id, name: data.get('name') });
-          renderClass(); view.querySelector('#student-form input')?.focus();
+          await api('saveLeagueTeam', { leagueId: current.id, name: data.get('name'), choices });
+          await loadLeague(current.id); refreshMe().catch(() => {});
+          renderLeague(); toast('Squadra salvata.');
         });
         if (form.id === 'musical-form') return withBusy(button, async () => {
           const title = String(data.get('title')).trim();
@@ -1011,6 +1278,8 @@
       });
 
       /* ---------- Start ---------- */
+      const join = new URLSearchParams(location.search).get('lega');
+      if (join) storage.set(JOIN_KEY, join, sessionStorage);
       const saved = storage.get(TOKEN_KEY);
       if (configured && saved?.token && saved.exp * 1000 > Date.now() + 60000) { session = saved; boot(); }
       else route();
