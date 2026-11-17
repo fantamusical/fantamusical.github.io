@@ -4,19 +4,23 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Fantamusical | Privacy</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Limelight&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
   <style>
-    :root { --paper: #f4f3ed; --surface: #fffefa; --ink: #20342e; --muted: #6d7871; --line: #dfe3d9; --green: #245c48; --lime: #d9ef84; }
+    :root { --cream: #fbf3e2; --ink: #2a1614; --muted: #7b6556; --gold: #d6a84c; --gold-bright: #f4d27c; --velvet: #6e1222; }
     * { box-sizing: border-box; }
-    body { margin: 0; color: var(--ink); background: var(--paper); font: 15px/1.6 "Avenir Next", Avenir, "Segoe UI", sans-serif; }
+    body { margin: 0; color: var(--ink); font: 15px/1.6 "Avenir Next", Avenir, "Segoe UI", sans-serif;
+      background: radial-gradient(ellipse 70% 40% at 50% -5%, rgba(255, 214, 140, .22), transparent 70%), linear-gradient(180deg, #24101a, #140a0d); background-attachment: fixed; min-height: 100vh; }
     main { max-width: 720px; margin: 0 auto; padding: 40px 16px 60px; }
-    .card { padding: 28px clamp(18px, 4vw, 34px); background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
-    .brand { display: flex; align-items: center; gap: 10px; margin-bottom: 24px; font: 20px "Iowan Old Style", "Palatino Linotype", Georgia, serif; }
-    .mark { display: grid; width: 34px; height: 34px; place-items: center; color: #183e32; background: var(--lime); border-radius: 10px 10px 10px 3px; font-weight: bold; }
-    h1 { margin: 0 0 6px; font: 34px/1.1 "Iowan Old Style", "Palatino Linotype", Georgia, serif; }
-    h2 { margin: 26px 0 6px; font-size: 16px; }
-    p, li { color: #45544b; }
+    .card { padding: 28px clamp(18px, 4vw, 34px); background: var(--cream); border: 1px solid #e3cf9f; border-radius: 10px; box-shadow: 0 14px 34px rgba(0, 0, 0, .35); }
+    .brand { display: flex; align-items: center; gap: 10px; margin-bottom: 24px; color: var(--gold-bright); font: 22px "Limelight", Georgia, serif; text-shadow: 0 0 10px rgba(244, 210, 124, .45); }
+    .mark { display: grid; width: 36px; height: 36px; place-items: center; color: #3d0912; background: radial-gradient(circle at 35% 30%, #fff1c2, var(--gold) 60%, #9c7428); border-radius: 50%; box-shadow: 0 0 14px rgba(244, 210, 124, .6); }
+    h1 { margin: 0 0 6px; color: #3d0912; font: 700 34px/1.1 "Playfair Display", Georgia, serif; }
+    h2 { margin: 26px 0 6px; color: var(--velvet); font: 700 17px "Playfair Display", Georgia, serif; }
+    p, li { color: #4a3226; }
     .muted { color: var(--muted); font-size: 13px; }
-    a { color: var(--green); }
+    a { color: var(--velvet); }
   </style>
 </head>
 <body>
