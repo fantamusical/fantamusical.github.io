@@ -1134,8 +1134,8 @@
         const free = cls.actors.filter(a => !ids.includes(a.id));
         const select = ids.length < MAX_ACTORS && free.length
           ? `<select data-pick="${kind}" data-rank="${rank}" data-role="${esc(role)}" aria-label="${esc(role)}"><option value="">${ids.length ? '+ altro attore' : 'Scegli un attore'}</option>${free.map(a => `<option value="${esc(a.id)}">${esc(a.name)}</option>`).join('')}</select>` : '';
-        // External actors (not in the game) can only appear in the official result: they count for the malus, not for n.
-        const extra = kind === 'result' && ids.length < MAX_ACTORS ? `<button type="button" class="button secondary small extra-button" data-action="add-extra" data-role="${esc(role)}" title="Attore che non partecipa al gioco">+ attore esterno</button>` : '';
+        // External actors (not in the game), in results and teams: they count for the malus (a and g), never for n or points.
+        const extra = ids.length < MAX_ACTORS ? `<button type="button" class="button secondary small extra-button" data-action="add-extra" data-kind="${kind}" data-rank="${rank}" data-role="${esc(role)}" title="Attore che non partecipa al gioco">+ attore esterno</button>` : '';
         return `<div class="field"><label>${esc(role)}</label><div class="actor-picks">${chips}${select}${extra}${!chips && !select && !extra ? '<span class="subtle">—</span>' : ''}</div></div>`;
       }
 
@@ -1258,14 +1258,14 @@
             ${section(4, 'Come si contano i punti della formazione', p('Conta <b>solo la formazione del musical indovinato</b>. La formazione vale al massimo <b>12 punti</b> e si calcola sugli <b>attori</b>, perché l’unica certezza è che ogni attore interpreta almeno un personaggio: non si sa quanti attori faranno ogni personaggio, né se tutti i personaggi verranno interpretati.') + ul([
               '<b>Valore di ogni attore</b>: i 12 punti si dividono in parti uguali tra gli <b>n</b> attori della classe che hanno un ruolo nel risultato. Ogni attore vale <b>p = 12 ÷ n</b>.',
               '<b>Attori con più ruoli</b>: se un attore ha <b>k</b> personaggi, ogni personaggio indovinato per lui vale <b>p ÷ k</b>. Indovinandoli tutti prendi il suo valore pieno p.',
-              '<b>Malus per personaggio</b>: per ogni personaggio si confronta quanti attori ha nel risultato (<b>a</b>) con quanti ne hai messi tu (<b>g</b>). Il malus è la differenza <b>|a − g|</b>, 1 punto per ogni attore di differenza. Vale 0 se metti tanti nomi quanti sono gli interpreti, anche se sbagliati. Conta anche sui personaggi che non interpreta nessuno (a = 0) e su quelli che lasci vuoti (g = 0).',
+              '<b>Malus per personaggio</b>: per ogni personaggio si confronta quanti attori ha nel risultato (<b>a</b>) con quanti ne hai messi tu (<b>g</b>). Il malus è la differenza <b>|a − g|</b>, 1 punto per ogni attore di differenza. Vale 0 se metti tanti nomi quanti sono gli interpreti, anche se sbagliati. Conta anche sui personaggi che non interpreta nessuno (a = 0), ma <b>non sui personaggi che lasci vuoti</b>.',
               '<b>Formazione</b> = punti degli attori − somma dei malus. Non va mai sotto zero, quindi non ti fa perdere i punti del musical.',
-              '<b>Attori esterni</b>: se nel risultato un personaggio è interpretato da qualcuno che non partecipa al gioco, viene inserito come <i>attore esterno</i>. Conta per il malus (a), ma non per n.',
+              '<b>Attori esterni</b>: se un personaggio è interpretato da qualcuno che non partecipa al gioco, nel risultato viene inserito come <i>attore esterno</i>. Anche tu puoi mettere un <i>attore esterno</i> nella tua formazione. Conta nel numero di nomi per il malus (a e g), ma non per n e non dà punti attore.',
               'I punti sono arrotondati a un decimale.'
             ]) + `<div class="score-legend" style="margin:10px 0 4px"><strong>Esempio.</strong> Risultato <i>Wicked</i>, con 6 attori del gioco nel cast: n = 6, quindi ogni attore vale p = 12 ÷ 6 = <b>2 punti</b>.<br>
               Cast ufficiale: Elphaba e Nessarose = Giulia (2 ruoli: ognuno vale 1) · Glinda = Sara e Marta · Fiyero = Luca · Madame Morrible = Chiara · Doctor Dillamond = Marco · Boq = un attore esterno.<br>
               La tua squadra ha <i>Wicked</i> come 2ª scelta: <b>3 punti</b>. La tua formazione:
-              Elphaba = Giulia ✓ <b>+1</b> · Glinda = Sara e Chiara: Sara ✓ <b>+2</b> (2 nomi per 2 interpreti, nessun malus) · Fiyero = Luca ✓ <b>+2</b> · Madame Morrible = Chiara ✓ <b>+2</b> · Doctor Dillamond = Marco ✓ <b>+2</b> · Boq = Marco ✗ (0 punti, ma 1 nome per 1 interprete: nessun malus) · Nessarose lasciata vuota: <b>malus 1</b>.<br>
+              Elphaba = Giulia ✓ <b>+1</b> · Glinda = Sara, Chiara e Luca: Sara ✓ <b>+2</b>, ma 3 nomi per 2 interpreti: <b>malus 1</b> · Fiyero = Luca ✓ <b>+2</b> · Madame Morrible = Chiara ✓ <b>+2</b> · Doctor Dillamond = Marco ✓ <b>+2</b> · Boq = un attore esterno (0 punti, 1 nome per 1 interprete: nessun malus) · Nessarose lasciata vuota (nessun malus).<br>
               Formazione = 9 − 1 = <b>8 punti</b>. Totale 3 + 8 = <b>11 punti</b>.</div>`)}
             ${section(5, 'Modifiche e scadenze', ul([
               'Una volta salvata, la tua squadra compare <b>in cima all’elenco</b> delle squadre. Per cambiarla tocca la matita ✏️.',
@@ -1483,11 +1483,12 @@
           'edit-result': () => { editingResult = true; renderMyClass(); },
           'cancel-result': () => { resetResultDraft(); renderMyClass(); },
           'add-extra': () => {
+            const cast = castOf(button.dataset.kind)(button.dataset.rank);
             const role = button.dataset.role;
-            const ids = resultDraft.cast[role] || [];
+            const ids = cast[role] || [];
             let n = 1;
             while (ids.includes(`extra:${n}`)) n++;
-            resultDraft.cast[role] = [...ids, `extra:${n}`].slice(0, MAX_ACTORS);
+            cast[role] = [...ids, `extra:${n}`].slice(0, MAX_ACTORS);
             renderMyClass();
           },
           'unpick': () => {
