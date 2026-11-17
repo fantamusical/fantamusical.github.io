@@ -267,6 +267,14 @@
     .seg { padding: 6px 13px; color: #f3dcc0; background: transparent; border: 0; border-radius: 99px; font: 600 12px var(--caps); letter-spacing: .04em; }
     .seg.active { color: #2b1405; background: linear-gradient(180deg, var(--gold-bright), var(--gold)); }
     .team-choice.jolly { border-style: dashed; }
+    .super-list { --muted: #7b6556; color: var(--ink); background: var(--cream); border: 1px solid #e3cf9f; border-radius: 8px; box-shadow: var(--shadow); overflow: hidden; }
+    .super-row { display: grid; grid-template-columns: 40px minmax(0, 1fr) 80px 80px 90px; align-items: center; gap: 10px; padding: 11px 16px; border-top: 1px solid #ecdcb6; text-align: right; }
+    .super-row > :nth-child(-n+2) { text-align: left; }
+    .super-row.super-head { color: #8a6f55; background: var(--cream-2); border-top: 0; font: 700 11px var(--caps); letter-spacing: .06em; text-transform: uppercase; }
+    .super-row.mine { background: #f6efcf; box-shadow: inset 3px 0 var(--gold); }
+    .super-name { display: flex; align-items: center; gap: 10px; min-width: 0; line-height: 1.25; }
+    .super-total { color: var(--velvet); font: 700 17px var(--display); }
+    @media (max-width: 560px) { .super-row { grid-template-columns: 30px minmax(0, 1fr) 46px 46px 62px; gap: 6px; padding: 10px; font-size: 12px; } .super-name .avatar { display: none; } }
     .jolly-card .choice-rank { font-size: 16px; }
     .rules .step { padding: 18px 0; }
     .rules p { margin: 6px 0 0; color: #45544b; }
@@ -1034,10 +1042,10 @@
           return `<article class="choice-card"><div class="choice-top"><div class="choice-rank">${i + 1}</div><div class="field"><label>${['Prima', 'Seconda', 'Terza'][i]} scelta · vale ${GENERAL_POINTS[i]} pt</label>
             <div class="pick-row"><select data-general-class="${i}" aria-label="Classe">${classOpts}</select><select data-general-musical="${i}" aria-label="Musical" ${pick?.classId ? '' : 'disabled'}>${musicalOptions(pick?.musicalKey || '')}</select></div></div></div></article>`;
         }).join('');
-        // Jolly: a musical without class, +3 if any picked class stages it; frozen once one of the picked classes is out.
-        const jollyFrozen = (mine?.picks || []).some(p => p && resultOfClass(p.classId));
-        const jollyCard = `<article class="choice-card jolly-card"><div class="choice-top"><div class="choice-rank">🃏</div><div class="field"><label>Musical jolly (facoltativo) · +${JOLLY_POINTS} pt per ogni tua classe che lo mette in scena</label>
-            ${jollyFrozen ? `<div>${jollyLine(mine?.jolly, mine?.jollyHit, mine?.jollyCount) || '<span class="subtle">Nessun jolly</span>'}<div class="subtle">Bloccato: è uscito il risultato di una delle tue classi.</div></div>`
+        // Jolly: a musical without class, +3 for every class NOT picked that stages it; frozen once any class result is out.
+        const jollyFrozen = Object.keys(general.results || {}).length > 0;
+        const jollyCard = `<article class="choice-card jolly-card"><div class="choice-top"><div class="choice-rank">🃏</div><div class="field"><label>Musical jolly (facoltativo) · +${JOLLY_POINTS} pt per ogni classe su cui non hai scommesso che lo mette in scena</label>
+            ${jollyFrozen ? `<div>${jollyLine(mine?.jolly, mine?.jollyHit, mine?.jollyCount) || '<span class="subtle">Nessun jolly</span>'}<div class="subtle">Bloccato: è già uscito il risultato di almeno una classe.</div></div>`
               : `<select data-general-jolly="1" aria-label="Musical jolly">${musicalOptions(generalDraft.jolly, 'Nessun jolly')}</select>`}</div></div></article>`;
         return `<form id="general-form"><section class="panel" style="margin-bottom:14px"><div class="panel-head"><h2>${mine ? 'Modifica la squadra' : 'Crea la tua squadra'}</h2></div>
             <div class="field" style="max-width:420px"><label for="general-name">Nome della squadra</label><input id="general-name" name="name" maxlength="40" required value="${esc(generalDraft.name)}"></div></section>
@@ -1062,9 +1070,9 @@
           ? `<select id="rank-filter" aria-label="Classe">${g.classes.map(c => `<option value="${esc(c.id)}" ${c.id === rankMode.value ? 'selected' : ''}>${esc(c.name)}</option>`).join('')}</select>`
           : rankMode.type === 'day'
           ? `<select id="rank-filter" aria-label="Giorno">${days.map(d => `<option value="${esc(d)}" ${d === rankMode.value ? 'selected' : ''}>${esc(DAYS[d] || d)}</option>`).join('')}</select>` : '';
-        const modes = [['all', 'Generale'], ['class', 'Per classe'], ['day', 'Per giorno']]
+        const modes = [['all', 'Generale'], ['class', 'Per classe'], ['day', 'Per giorno'], ['super', 'Supertotalona']]
           .map(([type, label]) => `<button type="button" class="seg${rankMode.type === type ? ' active' : ''}" data-action="rank-mode" data-mode="${type}">${label}</button>`).join('');
-        const scope = rankMode.type === 'class' ? `i giocatori di ${esc(rankMode.value)}` : rankMode.type === 'day' ? `i giocatori del ${esc((DAYS[rankMode.value] || rankMode.value).toLowerCase())}` : 'tutti i giocatori';
+        const scope = rankMode.type === 'super' ? 'lega generale + lega di classe' : rankMode.type === 'class' ? `i giocatori di ${esc(rankMode.value)}` : rankMode.type === 'day' ? `i giocatori del ${esc((DAYS[rankMode.value] || rankMode.value).toLowerCase())}` : 'tutti i giocatori';
 
         const card = (t, pos) => `<article class="team-card${t.mine ? ' mine' : ''}"><div class="team-head"><span class="rank-number">${pos}</span>${initials(t.name)}<div class="grow"><div class="person-name">${esc(t.name)}${t.mine ? ' <span class="subtle">(la tua)</span>' : ''}</div><div class="subtle">di ${esc(t.owner)}${t.ownerClass ? ` · ${esc(t.ownerClass)}` : ''}${t.mine ? ` · salvata ${esc(fmtDate(t.updatedAt))}` : ''}</div></div><span class="board-score">${fmtNum(t.points)} pt</span>${t.mine && canEdit ? editButton('edit-general', 'Modifica la squadra') : ''}</div>
             <div class="team-choices">${t.picks.map((p, k) => generalPickLine(p, k, t.hits?.[k])).join('')}${jollyLine(t.jolly, t.jollyHit, t.jollyCount)}</div></article>`;
@@ -1073,11 +1081,19 @@
         const lead = editingGeneral || !mine ? generalEditor(mine) : myPos >= 0 ? card(mine, positions[myPos]) : '';
         const others = ranked.map((t, i) => (t.mine ? '' : card(t, positions[i]))).join('');
         const allTied = ranked.length > 1 && ranked.every(t => t.points === ranked[0].points);
+        // Supertotalona: one row per player with the two league scores and their sum (no class-league teams shown).
+        const overall = g.overall || [];
+        const superPositions = positionsOf(overall);
+        const superList = `<div class="super-list"><div class="super-row super-head"><span>#</span><span>Giocatore</span><span>Generale</span><span>Classe</span><span>Totale</span></div>${overall.map((p, i) => `<div class="super-row${p.mine ? ' mine' : ''}"><span class="rank-number">${superPositions[i]}</span><span class="super-name">${initials(p.owner)}<span><b>${esc(p.owner)}</b>${p.mine ? ' <span class="subtle">(tu)</span>' : ''}<br><span class="subtle">${esc(p.ownerClass)}</span></span></span><span>${fmtNum(p.general)}</span><span>${fmtNum(p.classLeague)}</span><span class="super-total">${fmtNum(p.points)} pt</span></div>`).join('')}</div>
+          <p class="subtle" style="margin:10px 0 0">Delle leghe di classe si vede solo il punteggio: le squadre e le formazioni restano visibili soltanto ai membri di ciascuna classe.</p>`;
+        const superTied = overall.length > 1 && overall.every(p => p.points === overall[0].points);
         view.innerHTML = `${heading('Il Fantamusical di tutti', 'Lega generale', 'Tre classi con il loro musical (la prima è sempre la tua classe) più un musical jolly. Qui si gioca solo con i titoli.')}
           <section class="panel" style="margin-bottom:18px"><div class="panel-head"><h2>Risultati delle classi</h2><span class="subtle">${plural(Object.keys(g.results).length, 'uscito', 'usciti')} su ${g.classes.length}</span></div><div class="mini-results">${resultsGrid}</div></section>
           <section><div class="panel-head ranking-head"><h2>Classifica</h2><div class="ranking-controls"><div class="segmented">${modes}</div>${filterSelect}</div></div>
-            <p class="subtle" style="margin:-6px 0 12px">${plural(ranked.length, 'squadra', 'squadre')} · ${scope}${allTied ? ' · per ora tutti a pari merito' : ''}</p>
-            <div class="team-list">${lead}${others || (ranked.length ? '' : '<p class="subtle">Nessuna squadra in questa classifica.</p>')}</div></section>`;
+            ${rankMode.type === 'super'
+              ? `<p class="subtle" style="margin:-6px 0 12px">${plural(overall.length, 'giocatore', 'giocatori')} · ${scope}${superTied ? ' · per ora tutti a pari merito' : ''}</p>${superList}`
+              : `<p class="subtle" style="margin:-6px 0 12px">${plural(ranked.length, 'squadra', 'squadre')} · ${scope}${allTied ? ' · per ora tutti a pari merito' : ''}</p>
+            <div class="team-list">${lead}${others || (ranked.length ? '' : '<p class="subtle">Nessuna squadra in questa classifica.</p>')}</div>`}</section>`;
       }
 
       /* ---------- My class league ---------- */
@@ -1212,7 +1228,7 @@
             <table class="points-table">
               <thead><tr><th></th><th>1ª scelta</th><th>2ª scelta</th><th>3ª scelta</th><th>Extra</th><th>Massimo</th></tr></thead>
               <tbody>
-                <tr><th>Lega generale</th><td>9</td><td>6</td><td>4</td><td>jolly +3 per classe</td><td>28</td></tr>
+                <tr><th>Lega generale</th><td>9</td><td>6</td><td>4</td><td>jolly +3</td><td>19 + jolly</td></tr>
                 <tr><th>Lega della classe</th><td>6</td><td>3</td><td>1</td><td>formazione fino a 12</td><td>18</td></tr>
               </tbody>
             </table>
@@ -1230,9 +1246,9 @@
               'La squadra ha un <b>nome</b>, fino a <b>3 scelte</b> e un <b>musical jolly</b>. Ogni scelta è una <b>classe diversa</b> più il musical che pensi metterà in scena.',
               'La <b>1ª scelta è obbligatoria ed è sempre sulla tua classe</b>. La 2ª e la 3ª sono facoltative, su altre classi a tua scelta.',
               'Ogni scelta indovinata vale <b>9, 6 o 4 punti</b> (1ª, 2ª, 3ª scelta).',
-              'Il <b>jolly</b> è un musical senza classe, facoltativo: prendi <b>3 punti in più per ogni classe su cui hai scommesso</b> che lo mette in scena (6 se sono due classi, 9 se sono tre). Può anche coincidere con il titolo di una tua scelta.',
-              'Gli altri vedono il nome della tua squadra e <b>su quali classi</b> hai scommesso, ma <b>non i titoli</b>: ognuno si scopre quando esce il risultato della sua classe. Il jolly resta segreto finché non fa punti o finché non sono usciti i risultati di tutte le tue classi.'
-            ]) + `<div class="score-legend" style="margin:10px 0 4px"><strong>Esempio:</strong> sei in MerA e scegli 1ª MerA → <i>Wicked</i>, 2ª GioB → <i>Cats</i>, 3ª SabA → <i>Grease</i>, jolly <i>Matilda</i>. MerA fa <i>Wicked</i> (<b>+9</b>), GioB fa <i>Matilda</i> (la scelta è sbagliata, ma scatta il jolly: <b>+3</b>), SabA fa <i>Grease</i> (<b>+4</b>). Totale <b>16 punti</b>.</div>`)}
+              'Il <b>jolly</b> è un musical senza classe, facoltativo, che vale solo sulle <b>classi su cui non hai scommesso</b>: prendi <b>3 punti</b> se una di queste lo mette in scena, il doppio se sono due, e così via. Se lo mette in scena una delle tue tre classi, il jolly non conta.',
+              'Gli altri vedono il nome della tua squadra e <b>su quali classi</b> hai scommesso, ma <b>non i titoli</b>: ognuno si scopre quando esce il risultato della sua classe. Il jolly resta segreto finché non fa punti o finché non sono usciti i risultati di tutte le classi su cui non hai scommesso.'
+            ]) + `<div class="score-legend" style="margin:10px 0 4px"><strong>Esempio:</strong> sei in MerA e scegli 1ª MerA → <i>Wicked</i>, 2ª GioB → <i>Cats</i>, 3ª SabA → <i>Grease</i>, jolly <i>Matilda</i>. MerA fa <i>Wicked</i> (<b>+9</b>), GioB fa un altro musical (0), SabA fa <i>Grease</i> (<b>+4</b>) e VenA, su cui non hai scommesso, fa <i>Matilda</i>: scatta il jolly (<b>+3</b>). Totale <b>16 punti</b>.</div>`)}
             ${section(3, 'La lega della tua classe', ul([
               'È privata: la vedono <b>tutti e soli i membri della tua classe</b>, e ci sei dentro automaticamente.',
               'La squadra ha un nome e fino a <b>3 musical diversi</b>, in ordine di preferenza: valgono <b>6, 3 o 1 punto</b> se il musical della classe è la tua 1ª, 2ª o 3ª scelta.',
@@ -1255,7 +1271,7 @@
               'Una volta salvata, la tua squadra compare <b>in cima all’elenco</b> delle squadre. Per cambiarla tocca la matita ✏️.',
               '<b>Lega della classe</b>: puoi modificare la squadra finché non esce il risultato della tua classe.',
               '<b>Lega generale</b>: puoi modificarla quando vuoi, ma una scelta su una classe il cui risultato è uscito resta bloccata, e non puoi più scegliere classi con il risultato già uscito.',
-              'Il <b>jolly</b> si blocca appena esce il risultato di <b>una qualsiasi</b> delle classi su cui hai scommesso.'
+              'Il <b>jolly</b> si blocca appena esce il <b>primo risultato</b> di una qualsiasi classe.'
             ]))}
             ${section(6, 'Il risultato ufficiale', ul([
               'Lo inserisce <b>un membro della classe</b>, dalla pagina <i>La mia classe</i>: musical assegnato e cast ufficiale, da 1 a 6 interpreti per personaggio.',
@@ -1267,6 +1283,7 @@
               'Le squadre sono sempre mostrate <b>in ordine di classifica</b>, aggiornata a ogni risultato; la tua resta in testa all’elenco con la sua posizione. Prima dei risultati sono tutte a pari merito.',
               'Nella lega della classe, sotto ogni squadra trovi il dettaglio: punti del musical, punti degli attori e malus.',
               'Nella lega generale puoi vedere la classifica <b>generale</b>, <b>per classe</b> (solo i giocatori di una classe) o <b>per giorno</b> (solo i giocatori delle classi di quel giorno: mercoledì, giovedì, venerdì, sabato).',
+              'C’è anche la <b>Supertotalona</b>: per ogni giocatore somma i punti della lega generale e quelli della sua lega di classe. Delle leghe di classe si vede solo il punteggio, mai la squadra o la formazione.',
               'A parità di punti si è <b>a pari merito</b> e si occupa la stessa posizione.'
             ]))}
             ${section(8, 'Il catalogo', p('Il catalogo dei musical è comune a tutti. Se manca un titolo o un personaggio, chiunque può aggiungerlo dalla pagina <i>Catalogo</i>. Per schierare una formazione, il musical deve avere i personaggi nel catalogo.'))}
