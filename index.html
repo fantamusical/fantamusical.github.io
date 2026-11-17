@@ -247,6 +247,14 @@
     .my-team .panel-head { align-items: flex-start; }
     .my-team h2 { margin-top: 2px; }
     .team-head .icon-button { margin-left: 4px; }
+    .rules-summary ul { margin: 0 0 14px; padding-left: 18px; color: #45544b; }
+    .rules-summary li { margin: 4px 0; }
+    .points-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .points-table th, .points-table td { padding: 8px 10px; text-align: center; border-bottom: 1px solid #edf0e9; }
+    .points-table thead th { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .04em; }
+    .points-table tbody th { text-align: left; }
+    .points-table td:last-child { font-weight: 750; color: var(--green); }
+    @media (max-width: 560px) { .points-table th, .points-table td { padding: 6px 4px; font-size: 11px; } }
     .rules .step { padding: 18px 0; }
     .rules p { margin: 6px 0 0; color: #45544b; }
     .rules ul { margin: 8px 0 0; padding-left: 18px; color: #45544b; }
@@ -859,20 +867,18 @@
         const mine = g.teams.find(t => t.mine);
         const anyResult = Object.keys(g.results).length > 0;
         const canEdit = mine && g.classes.some(c => !resultOfClass(c.id));
-        const myTeam = mine && !editingGeneral
-          ? `<section class="panel my-team"><div class="panel-head"><div><div class="eyebrow">La mia squadra</div><h2>${esc(mine.name)}</h2></div><div class="button-row">${anyResult ? `<span class="result-points">${mine.points}<span> pt</span></span>` : ''}${canEdit ? editButton('edit-general', 'Modifica la squadra') : ''}</div></div>
-              <div class="team-choices">${mine.picks.map((p, k) => generalPickLine(p, k, mine.hits?.[k])).join('') || '<p class="subtle">Nessuna scelta.</p>'}</div>
-              <p class="subtle" style="margin:10px 0 0">Salvata ${esc(fmtDate(mine.updatedAt))} · gli altri vedono le classi scelte ma non i titoli, finché non esce il risultato.</p></section>`
-          : generalEditor(mine);
         const resultsGrid = g.classes.map(c => `<div class="mini-result${g.results[c.id] ? ' done' : ''}"><b>${esc(c.name)}</b><span>${g.results[c.id] ? esc(titleOf(g.results[c.id].musicalKey)) : 'in attesa'}</span></div>`).join('');
         const positions = positionsOf(g.teams);
-        const teamsHtml = g.teams.map((t, i) => `<article class="team-card${t.mine ? ' mine' : ''}"><div class="team-head">${anyResult ? `<span class="rank-number">${positions[i]}</span>` : ''}${initials(t.name)}<div class="grow"><div class="person-name">${esc(t.name)}${t.mine ? ' <span class="subtle">(la tua)</span>' : ''}</div><div class="subtle">di ${esc(t.owner)}${t.ownerClass ? ` · ${esc(t.ownerClass)}` : ''}</div></div>${anyResult ? `<span class="board-score">${t.points} pt</span>` : ''}</div>
-            <div class="team-choices">${t.picks.map((p, k) => generalPickLine(p, k, t.hits?.[k])).join('')}</div></article>`).join('');
-        view.innerHTML = `${heading('Il Fantamusical di tutti', 'Lega generale', 'Scegli fino a tre classi diverse e indovina il musical che metterà in scena ciascuna. Qui si gioca solo con i titoli.')}
-          ${myTeam}
-          <section class="panel" style="margin:18px 0 15px"><div class="panel-head"><h2>Risultati delle classi</h2><span class="subtle">${plural(Object.keys(g.results).length, 'uscito', 'usciti')} su ${g.classes.length}</span></div><div class="mini-results">${resultsGrid}</div></section>
+        const card = (t, i) => `<article class="team-card${t.mine ? ' mine' : ''}"><div class="team-head">${anyResult ? `<span class="rank-number">${positions[i]}</span>` : ''}${initials(t.name)}<div class="grow"><div class="person-name">${esc(t.name)}${t.mine ? ' <span class="subtle">(la tua)</span>' : ''}</div><div class="subtle">di ${esc(t.owner)}${t.ownerClass ? ` · ${esc(t.ownerClass)}` : ''}${t.mine ? ` · salvata ${esc(fmtDate(t.updatedAt))}` : ''}</div></div>${anyResult ? `<span class="board-score">${t.points} pt</span>` : ''}${t.mine && canEdit ? editButton('edit-general', 'Modifica la squadra') : ''}</div>
+            <div class="team-choices">${t.picks.map((p, k) => generalPickLine(p, k, t.hits?.[k])).join('')}</div></article>`;
+        // My team leads the list (compact, with the pencil); while editing, the editor takes its place.
+        const myIndex = g.teams.findIndex(t => t.mine);
+        const lead = editingGeneral || !mine ? generalEditor(mine) : card(mine, myIndex);
+        const othersHtml = g.teams.map((t, i) => (t.mine ? '' : card(t, i))).join('');
+        view.innerHTML = `${heading('Il Fantamusical di tutti', 'Lega generale', 'Scegli fino a tre classi diverse e indovina il musical che metterà in scena ciascuna: la prima scelta è sempre sulla tua classe. Qui si gioca solo con i titoli.')}
+          <section class="panel" style="margin-bottom:18px"><div class="panel-head"><h2>Risultati delle classi</h2><span class="subtle">${plural(Object.keys(g.results).length, 'uscito', 'usciti')} su ${g.classes.length}</span></div><div class="mini-results">${resultsGrid}</div></section>
           <section><div class="panel-head"><h2>${anyResult ? 'Classifica' : 'Squadre in gara'}</h2><span class="subtle">${plural(g.teams.length, 'squadra', 'squadre')}</span></div>
-            ${g.teams.length ? `<div class="team-list">${teamsHtml}</div>` : '<section class="panel empty"><strong>Nessuna squadra ancora</strong>Sii il primo a schierarne una!</section>'}</section>`;
+            <div class="team-list">${lead}${othersHtml || (mine ? '<p class="subtle">Nessun’altra squadra per ora.</p>' : '')}</div></section>`;
       }
 
       /* ---------- My class league ---------- */
@@ -966,18 +972,17 @@
         const c = cls;
         const mine = c.teams.find(t => t.mine);
         const played = c.teams.filter(t => t.hasTeam).length;
-        const myTeam = editingTeam && !c.result
-          ? teamEditor(mine)
-          : mine?.hasTeam
-            ? `<div class="eyebrow" style="margin-bottom:8px">La mia squadra</div>${teamCard(mine, 0, c.result ? '' : editButton('edit-team', 'Modifica la squadra'))}`
-            : `<section class="panel empty"><strong>Non hai schierato una squadra</strong>${c.result ? 'Il risultato è già uscito.' : ''}</section>`;
         const positions = c.result ? positionsOf(c.teams) : [];
-        const others = c.teams.map((t, i) => teamCard(t, positions[i])).join('');
+        const myIndex = c.teams.findIndex(t => t.mine);
+        // My team leads the list (compact, with the pencil); while editing, the editor takes its place.
+        const lead = editingTeam && !c.result
+          ? teamEditor(mine)
+          : mine ? teamCard(mine, positions[myIndex], mine.hasTeam && !c.result ? editButton('edit-team', 'Modifica la squadra') : '') : '';
+        const others = c.teams.map((t, i) => (t.mine ? '' : teamCard(t, positions[i]))).join('');
         view.innerHTML = `${heading(`Lega della classe · visibile solo ai membri di ${esc(c.id)}`, `La mia classe · ${c.id}`, `${plural(c.actors.length, 'attore', 'attori')} · ${plural(played, 'squadra schierata', 'squadre schierate')}${c.result ? ` · risultato: ${esc(titleOf(c.result.musicalKey))}` : ''}`, '<button class="button secondary small" data-action="reload">↻ Aggiorna</button>')}
           ${c.result && mine?.hasTeam ? `<div class="result-strip"><div><div class="eyebrow">Risultato ufficiale</div><div class="result-title">${esc(titleOf(c.result.musicalKey))}</div></div><div class="result-points">${mine.points}<span> pt</span></div></div>` : ''}
-          ${myTeam}
-          <section style="margin-top:22px"><div class="panel-head"><h2>${c.result ? 'Classifica' : 'Squadre della classe'}</h2><span class="subtle">${played} su ${plural(c.teams.length, 'membro', 'membri')}</span></div>
-            <div class="team-list">${others}</div></section>
+          <section><div class="panel-head"><h2>${c.result ? 'Classifica' : 'Squadre della classe'}</h2><span class="subtle">${played} su ${plural(c.teams.length, 'membro', 'membri')}</span></div>
+            <div class="team-list">${lead}${others}</div></section>
           ${resultPanel()}
           <section class="panel" style="margin-top:18px"><div class="panel-head"><h2>Attori di ${esc(c.id)}</h2></div>
             <div class="student-list" style="margin:0">${c.actors.map(a => `<span class="student-chip">${esc(a.name)}</span>`).join('') || '<span class="subtle">Nessun attore registrato.</span>'}</div>
@@ -989,38 +994,73 @@
         setCrumb('Fantamusical · <strong>Regolamento</strong>');
         const section = (num, title, body) => `<div class="step"><div class="step-num">${num}</div><div><h3 style="font:19px/1.25 var(--serif)">${title}</h3>${body}</div></div>`;
         const p = text => `<p>${text}</p>`;
-        view.innerHTML = `${heading('Le regole del gioco', 'Regolamento', 'Come si entra, come si gioca e come si contano i punti.', me ? '' : '<a class="button secondary" href="#/">← Torna all’accesso</a>')}
+        const ul = items => `<ul>${items.map(i => `<li>${i}</li>`).join('')}</ul>`;
+        view.innerHTML = `${heading('Le regole del gioco', 'Regolamento', 'Tutto quello che serve per giocare, in breve.', me ? '' : '<a class="button secondary" href="#/">← Torna all’accesso</a>')}
+          <section class="panel rules-summary" style="margin-bottom:16px">
+            <h2 style="margin-bottom:10px">In breve</h2>
+            ${ul([
+              'Ogni classe (MerA, MerB, MerC, GioA, GioB, VenA, VenB, SabA, SabB) mette in scena un musical: devi indovinare <b>quale</b> e, nella tua classe, <b>chi farà quale ruolo</b>.',
+              'Entri scegliendo la tua classe e il tuo nome: diventi un <b>attore</b> della classe.',
+              'Giochi in <b>due leghe</b>, con una squadra in ciascuna: la <b>lega generale</b> (tutte le classi, solo titoli) e la <b>lega della tua classe</b> (titoli e formazioni).',
+              'Le squadre si modificano fino all’uscita del risultato della classe interessata; poi si contano i punti.'
+            ])}
+            <table class="points-table">
+              <thead><tr><th></th><th>1ª scelta</th><th>2ª scelta</th><th>3ª scelta</th><th>Formazione</th><th>Massimo</th></tr></thead>
+              <tbody>
+                <tr><th>Lega generale</th><td>6</td><td>4</td><td>2</td><td>—</td><td>12</td></tr>
+                <tr><th>Lega della classe</th><td>6</td><td>4</td><td>2</td><td>fino a 12</td><td>18</td></tr>
+              </tbody>
+            </table>
+          </section>
           <section class="panel rules" style="margin-bottom:16px"><div class="steps">
-            ${section(1, 'Lo scopo', p('Ogni classe della scuola (MerA, MerB, MerC, GioA, GioB, VenA, VenB, SabA, SabB) mette in scena un musical. Il gioco è indovinare <b>quale musical</b> toccherà a ogni classe e <b>chi</b> interpreterà i ruoli principali.'))}
-            ${section(2, 'Entrare in scena (e il consenso)', p('Al primo accesso con Google scegli <b>la tua classe</b> e il <b>nome</b> con cui comparirai. Così diventi un <b>attore</b> e un membro della tua classe: è l’unico modo per farne parte. Nessuno può aggiungere il nome di un’altra persona.') + p('Comparire come attore è la condizione per giocare: accetti che gli altri membri della tua classe scommettano sui ruoli che ti verranno assegnati, e in cambio puoi scommettere sui loro. Puoi cambiare nome o classe dal profilo, oppure ritirare il consenso eliminando il profilo.'))}
-            ${section(3, 'Si gioca in due leghe', `<ul>
-              <li><b>La lega della tua classe</b>: privata, la vedono solo i membri della tua classe. Ci entri automaticamente.</li>
-              <li><b>La lega generale</b>: di tutti, su tutte le classi, solo con i titoli dei musical.</li></ul>` + p('In ciascuna lega hai <b>una squadra</b>. Una volta salvata la vedi in forma compatta: per cambiarla tocca la matita ✏️.'))}
-            ${section(4, 'La lega della classe', `<ul>
-              <li>La squadra ha un nome e fino a <b>3 musical diversi</b>, in ordine di preferenza.</li>
-              <li>Per ciascun musical schieri la <b>formazione</b>: a ogni ruolo assegni da 1 a 3 attori della classe.</li>
-              <li>Le squadre e le formazioni sono <b>visibili agli altri membri</b> della classe.</li>
-              <li>La squadra si può modificare finché non esce il risultato della classe.</li></ul>`)}
-            ${section(5, 'Il punteggio della lega della classe', `<ul>
-              <li><b>Musical</b>: 6, 4 o 2 punti se il musical della classe era la tua prima, seconda o terza scelta. Se non è tra le tue scelte prendi 0.</li>
-              <li><b>Formazione</b>: conta solo quella del musical indovinato e vale fino a <b>12 punti</b>. Per ogni ruolo si confrontano i tuoi attori con quelli ufficiali: il ruolo vale <i>attori indovinati ÷ attori diversi in totale</i> (i tuoi più quelli ufficiali). Indovinare esattamente vale pieno; aggiungere attori “per sicurezza” abbassa il valore.</li>
-              <li>I ruoli <b>non pesano tutti uguale</b>: un ruolo vale di più quanto è più difficile indovinarlo a caso, cioè quanti più attori ha la classe rispetto agli attori ufficiali di quel ruolo (peso = log₂(attori della classe ÷ attori del ruolo)). Un ruolo con un solo interprete pesa più di uno in alternanza.</li>
-              <li>Alla fine la formazione viene sempre riportata su <b>12 punti</b>: il massimo è lo stesso per tutti, qualunque sia il numero di attori della classe o di ruoli del musical. Massimo totale <b>18 punti</b>, arrotondati a un decimale.</li></ul>
-              <div class="score-legend" style="margin:10px 0 4px"><strong>Esempio:</strong> classe con 16 attori, risultato <i>Wicked</i>: Elphaba = Giulia (1 interprete, peso log₂16 = 4), Glinda = Sara e Marta (2 interpreti, peso log₂8 = 3). Avevi <i>Wicked</i> come seconda scelta (<b>4 punti</b>), Elphaba = Giulia (ruolo pieno: 1) e Glinda = Sara e Chiara (1 giusta su 3 attrici diverse: 1/3). Formazione = 12 × (4×1 + 3×⅓) ÷ (4+3) = 12 × 5/7 ≈ <b>8,6 punti</b>. Totale <b>12,6 punti</b>.</div>`)}
-            ${section(6, 'La lega generale', `<ul>
-              <li>Partecipa chiunque abbia fatto il primo accesso.</li>
-              <li>La squadra ha un <b>nome</b> e fino a <b>3 scelte</b>: ognuna è una <b>classe diversa</b> con il musical che pensi metterà in scena. Solo titoli, niente formazioni.</li>
-              <li>La <b>prima scelta è obbligatoria ed è sempre sulla tua classe</b>; la seconda e la terza sono facoltative, su altre classi a tua scelta.</li>
-              <li>Ogni scelta indovinata vale <b>6 punti</b> se è la prima, <b>4</b> la seconda, <b>2</b> la terza. Massimo 12 punti.</li>
-              <li>Gli altri vedono il nome della tua squadra e <b>su quali classi</b> hai scommesso, ma <b>i titoli restano segreti</b>: ognuno si scopre quando esce il risultato della sua classe.</li>
-              <li>Puoi modificare la squadra quando vuoi, ma una scelta su una classe il cui risultato è uscito resta bloccata, e non puoi scegliere classi il cui risultato è già uscito.</li></ul>`)}
-            ${section(7, 'Il risultato ufficiale', p('Il risultato della classe (musical assegnato e cast ufficiale, fino a 3 attori per ruolo) lo inserisce <b>un membro della classe</b>, dalla pagina <i>La mia classe</i>. Vale per la lega della classe e per la lega generale. Si può correggere o annullare: annullandolo, le squadre della classe tornano modificabili.'))}
-            ${section(8, 'Classifiche', p('La lega della classe e la lega generale hanno ciascuna la propria classifica. A parità di punti si è <b>a pari merito</b> e si occupa la stessa posizione.'))}
-            ${section(9, 'Il catalogo', p('Il catalogo dei musical è comune a tutti. Se manca un titolo o un personaggio, chiunque può aggiungerlo dalla pagina Catalogo. Solo i musical con ruoli nel catalogo permettono di schierare la formazione.'))}
-            ${section(10, 'Fair play e privacy', `<ul>
-              <li>Pubblica il risultato solo quando musical e cast sono <b>ufficiali</b>, e non annullarlo per cambiare la tua squadra.</li>
-              <li>I nomi degli attori di una classe li vedono solo i membri di quella classe. Nella lega generale gli altri vedono il nome della tua squadra, il tuo nome e la tua classe.</li>
-              <li>L’email di Google non viene mostrata agli altri giocatori.</li></ul>`)}
+            ${section(1, 'Iscrizione e consenso', ul([
+              'Al primo accesso con Google scegli <b>la tua classe</b> e il <b>nome</b> con cui comparirai.',
+              'Così diventi un <b>attore</b> della tua classe. È l’unico modo per farne parte: nessuno può inserire il nome di un’altra persona.',
+              'Dai il consenso a comparire come attore: i compagni di classe potranno scommettere sui ruoli che ti verranno assegnati, e tu sui loro.',
+              'Dal <b>profilo</b> puoi cambiare nome o classe, oppure ritirare il consenso eliminando il profilo.'
+            ]))}
+            ${section(2, 'La lega generale', ul([
+              'È aperta a tutti i giocatori e riguarda <b>tutte le classi</b>. Si gioca solo con i <b>titoli</b>.',
+              'La squadra ha un <b>nome</b> e fino a <b>3 scelte</b>. Ogni scelta è una <b>classe diversa</b> più il musical che pensi metterà in scena.',
+              'La <b>1ª scelta è obbligatoria ed è sempre sulla tua classe</b>. La 2ª e la 3ª sono facoltative, su altre classi a tua scelta.',
+              'Ogni scelta indovinata vale <b>6, 4 o 2 punti</b> (1ª, 2ª, 3ª scelta).',
+              'Gli altri vedono il nome della tua squadra e <b>su quali classi</b> hai scommesso, ma <b>non i titoli</b>: ognuno si scopre quando esce il risultato della sua classe.'
+            ]) + `<div class="score-legend" style="margin:10px 0 4px"><strong>Esempio:</strong> sei in MerA e scegli 1ª MerA → <i>Wicked</i>, 2ª GioB → <i>Cats</i>, 3ª SabA → <i>Grease</i>. Se MerA fa <i>Wicked</i> e SabA fa <i>Grease</i>, ma GioB fa un altro musical, prendi 6 + 2 = <b>8 punti</b>.</div>`)}
+            ${section(3, 'La lega della tua classe', ul([
+              'È privata: la vedono <b>solo i membri della tua classe</b>, e ci sei dentro automaticamente.',
+              'La squadra ha un nome e fino a <b>3 musical diversi</b>, in ordine di preferenza.',
+              'Per ogni musical schieri la <b>formazione</b>: a ogni ruolo assegni <b>da 1 a 3 attori</b> della classe (utile per i ruoli in alternanza).',
+              'Squadre e formazioni sono <b>visibili a tutti i membri</b> della classe.'
+            ]))}
+            ${section(4, 'Come si contano i punti della formazione', ul([
+              'Conta <b>solo la formazione del musical indovinato</b>. Se il musical della classe non è tra le tue scelte, prendi 0 punti.',
+              '<b>Ogni ruolo</b> vale la quota di attori azzeccati: <i>attori giusti ÷ attori diversi in totale</i> (i tuoi più quelli ufficiali). Azzeccare esattamente vale pieno; aggiungere nomi “per sicurezza” abbassa il valore.',
+              '<b>I ruoli difficili pesano di più</b>: un ruolo con un solo interprete in una classe numerosa conta più di un ruolo in alternanza. Il peso è log₂(attori della classe ÷ interpreti ufficiali del ruolo).',
+              'Il totale viene sempre riportato su <b>12 punti</b>: il massimo è uguale per tutte le classi, qualunque sia il numero di attori o di ruoli.',
+              'I punti sono arrotondati a un decimale. I ruoli lasciati vuoti nel risultato ufficiale non contano.'
+            ]) + `<div class="score-legend" style="margin:10px 0 4px"><strong>Esempio:</strong> classe di 16 attori, risultato <i>Wicked</i> con Elphaba = Giulia (1 interprete, peso 4) e Glinda = Sara e Marta (2 interpreti, peso 3). Avevi <i>Wicked</i> come 2ª scelta: <b>4 punti</b>. Per Elphaba hai messo Giulia: ruolo pieno (1). Per Glinda hai messo Sara e Chiara: 1 giusta su 3 nomi diversi (⅓). Formazione = 12 × (4×1 + 3×⅓) ÷ (4+3) ≈ <b>8,6 punti</b>. Totale <b>12,6 punti</b>.</div>`)}
+            ${section(5, 'Modifiche e scadenze', ul([
+              'Una volta salvata, la tua squadra compare <b>in cima all’elenco</b> delle squadre. Per cambiarla tocca la matita ✏️.',
+              '<b>Lega della classe</b>: puoi modificare la squadra finché non esce il risultato della tua classe.',
+              '<b>Lega generale</b>: puoi modificarla quando vuoi, ma una scelta su una classe il cui risultato è uscito resta bloccata, e non puoi più scegliere classi con il risultato già uscito.',
+              'Se cambi classe dal profilo, la squadra nella lega della vecchia classe viene eliminata e la 1ª scelta della lega generale va rifatta sulla nuova classe.'
+            ]))}
+            ${section(6, 'Il risultato ufficiale', ul([
+              'Lo inserisce <b>un membro della classe</b>, dalla pagina <i>La mia classe</i>: musical assegnato e cast ufficiale (fino a 3 attori per ruolo).',
+              'Vale sia per la lega della classe sia per la lega generale.',
+              'Si può correggere o annullare. Annullandolo, le squadre della classe tornano modificabili.'
+            ]))}
+            ${section(7, 'Classifiche', ul([
+              'Ogni lega ha la sua classifica, aggiornata a ogni risultato.',
+              'A parità di punti si è <b>a pari merito</b> e si occupa la stessa posizione.'
+            ]))}
+            ${section(8, 'Il catalogo', p('Il catalogo dei musical è comune a tutti. Se manca un titolo o un personaggio, chiunque può aggiungerlo dalla pagina <i>Catalogo</i>. Per schierare una formazione, il musical deve avere i ruoli nel catalogo.'))}
+            ${section(9, 'Fair play e privacy', ul([
+              'Inserisci il risultato solo quando musical e cast sono <b>ufficiali</b>, e non annullarlo per cambiare la tua squadra.',
+              'Attori, squadre e formazioni della lega di una classe li vedono solo i membri di quella classe.',
+              'Nella lega generale tutti vedono il nome della tua squadra, il tuo nome e la tua classe.',
+              'La tua email Google non viene mostrata agli altri giocatori.'
+            ]))}
           </div></section>`;
       }
 
