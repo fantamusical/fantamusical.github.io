@@ -260,6 +260,14 @@
     @media (max-width: 560px) { .points-table th, .points-table td { padding: 6px 4px; font-size: 11px; } }
     .points-breakdown { margin-top: 10px; padding: 7px 10px; color: #5b4433; background: #f7ecd2; border-radius: 5px; font-size: 12px; }
     .extra-button { min-height: 30px; padding: 0 9px; font-size: 11px; }
+    .ranking-head { flex-wrap: wrap; }
+    .ranking-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+    .ranking-controls .combo, .ranking-controls select { width: 170px; }
+    .segmented { display: inline-flex; padding: 3px; background: rgba(0, 0, 0, .3); border: 1px solid var(--gold-deep); border-radius: 99px; }
+    .seg { padding: 6px 13px; color: #f3dcc0; background: transparent; border: 0; border-radius: 99px; font: 600 12px var(--caps); letter-spacing: .04em; }
+    .seg.active { color: #2b1405; background: linear-gradient(180deg, var(--gold-bright), var(--gold)); }
+    .team-choice.jolly { border-style: dashed; }
+    .jolly-card .choice-rank { font-size: 16px; }
     .rules .step { padding: 18px 0; }
     .rules p { margin: 6px 0 0; color: #45544b; }
     .rules ul { margin: 8px 0 0; padding-left: 18px; color: #45544b; }
@@ -460,7 +468,10 @@
       CONFIG.GOOGLE_CLIENT_ID = String(CONFIG.GOOGLE_CLIENT_ID).trim();
       const TOKEN_KEY = 'fantamusical-session';
       const JOIN_KEY = 'fantamusical-join';
-      const MUSICAL_POINTS = [6, 3, 1];
+      const MUSICAL_POINTS = [6, 3, 1];   // class league
+      const GENERAL_POINTS = [9, 6, 4];   // general league
+      const JOLLY_POINTS = 3;
+      const DAYS = { Mer: 'Mercoledì', Gio: 'Giovedì', Ven: 'Venerdì', Sab: 'Sabato' };
       const MAX_ACTORS = 6;
       const seedCatalog = [
         ["The 25th Annual Putnam County Spelling Bee","William Barfée, Olive Ostrovsky, Leaf Coneybear, Logainne SchwartzandGrubenierre, Chip Tolentino, Marcy Park, Rona Lisa Peretti, Vice Principal Douglas Panch, Mitch Mahoney"],
@@ -784,6 +795,7 @@
       let general = null;          // general league data
       let generalDraft = null;     // { name, picks: [ {classId, musicalKey} | null ] x3 }
       let editingGeneral = false;
+      let rankMode = { type: 'all', value: '' };   // general-league ranking: all / by class / by day
       let cls = null;              // my class league data
       let draft = [];              // class team being edited: [{ musicalKey, cast }] x3
       let teamName = '';
@@ -979,7 +991,7 @@
       }
       function resetGeneralDraft() {
         const mine = general.teams.find(t => t.mine);
-        generalDraft = { name: mine?.name || `Squadra di ${me.user.name}`, picks: [0, 1, 2].map(i => mine?.picks?.[i] ? { ...mine.picks[i] } : null) };
+        generalDraft = { name: mine?.name || `Squadra di ${me.user.name}`, picks: [0, 1, 2].map(i => mine?.picks?.[i] ? { ...mine.picks[i] } : null), jolly: mine?.jolly?.musicalKey || '' };
         // The first pick is always on the player's own class.
         if (!generalDraft.picks[0]) generalDraft.picks[0] = { classId: me.user.classId, musicalKey: '' };
         editingGeneral = !mine || !mine.picks?.[0];
@@ -989,8 +1001,14 @@
       function generalPickLine(pick, k, hit) {
         if (!pick) return '';
         if (pick.hidden) return `<div class="team-choice"><span class="choice-num">${k + 1}</span><div class="grow"><b>${esc(pick.classId || '?')}</b> · <span class="subtle">🔒 titolo segreto fino al risultato</span></div></div>`;
-        const status = hit === true ? ` <span class="status-ok">✓ +${MUSICAL_POINTS[k]}</span>` : hit === false ? ' <span class="status-wait">✗</span>' : '';
+        const status = hit === true ? ` <span class="status-ok">✓ +${GENERAL_POINTS[k]}</span>` : hit === false ? ' <span class="status-wait">✗</span>' : '';
         return `<div class="team-choice${hit ? ' hit' : ''}"><span class="choice-num">${k + 1}</span><div class="grow"><b>${esc(pick.classId)}</b> · ${esc(titleOf(pick.musicalKey))}${status}</div></div>`;
+      }
+      function jollyLine(jolly, hit, count = 1) {
+        if (!jolly) return '';
+        if (jolly.hidden) return `<div class="team-choice jolly"><span class="choice-num">🃏</span><div class="grow"><b>Jolly</b> · <span class="subtle">🔒 segreto</span></div></div>`;
+        const status = hit === true ? ` <span class="status-ok">✓ +${JOLLY_POINTS * (count || 1)}${count > 1 ? ` (${count} classi)` : ''}</span>` : hit === false ? ' <span class="status-wait">✗</span>' : '';
+        return `<div class="team-choice jolly${hit ? ' hit' : ''}"><span class="choice-num">🃏</span><div class="grow"><b>Jolly</b> · ${esc(titleOf(jolly.musicalKey))}${status}</div></div>`;
       }
 
       function generalEditor(mine) {
@@ -1004,7 +1022,7 @@
             // First pick: fixed on the own class, only the musical is chosen.
             const own = me.user.classId;
             const closed = Boolean(resultOfClass(own));
-            return `<article class="choice-card"><div class="choice-top"><div class="choice-rank">1</div><div class="field"><label>Prima scelta · la tua classe · vale ${MUSICAL_POINTS[0]} pt</label>
+            return `<article class="choice-card"><div class="choice-top"><div class="choice-rank">1</div><div class="field"><label>Prima scelta · la tua classe · vale ${GENERAL_POINTS[0]} pt</label>
               ${closed ? `<div class="notice" style="margin:0">Il risultato di ${esc(own)} è già uscito: la prima scelta non si può più giocare.</div>`
                 : `<div class="pick-row"><div class="fixed-class">${esc(own)}</div><select data-general-musical="0" aria-label="Musical di ${esc(own)}">${musicalOptions(pick?.musicalKey || '')}</select></div>`}</div></div></article>`;
           }
@@ -1013,33 +1031,53 @@
             const closed = Boolean(resultOfClass(c.id));
             return `<option value="${esc(c.id)}" ${pick?.classId === c.id ? 'selected' : ''} ${taken || closed ? 'disabled' : ''}>${esc(c.name)}${closed ? ' (risultato uscito)' : ''}</option>`;
           }).join('')}`;
-          return `<article class="choice-card"><div class="choice-top"><div class="choice-rank">${i + 1}</div><div class="field"><label>${['Prima', 'Seconda', 'Terza'][i]} scelta · vale ${MUSICAL_POINTS[i]} pt</label>
+          return `<article class="choice-card"><div class="choice-top"><div class="choice-rank">${i + 1}</div><div class="field"><label>${['Prima', 'Seconda', 'Terza'][i]} scelta · vale ${GENERAL_POINTS[i]} pt</label>
             <div class="pick-row"><select data-general-class="${i}" aria-label="Classe">${classOpts}</select><select data-general-musical="${i}" aria-label="Musical" ${pick?.classId ? '' : 'disabled'}>${musicalOptions(pick?.musicalKey || '')}</select></div></div></div></article>`;
         }).join('');
+        // Jolly: a musical without class, +3 if any picked class stages it; frozen once one of the picked classes is out.
+        const jollyFrozen = (mine?.picks || []).some(p => p && resultOfClass(p.classId));
+        const jollyCard = `<article class="choice-card jolly-card"><div class="choice-top"><div class="choice-rank">🃏</div><div class="field"><label>Musical jolly (facoltativo) · +${JOLLY_POINTS} pt per ogni tua classe che lo mette in scena</label>
+            ${jollyFrozen ? `<div>${jollyLine(mine?.jolly, mine?.jollyHit, mine?.jollyCount) || '<span class="subtle">Nessun jolly</span>'}<div class="subtle">Bloccato: è uscito il risultato di una delle tue classi.</div></div>`
+              : `<select data-general-jolly="1" aria-label="Musical jolly">${musicalOptions(generalDraft.jolly, 'Nessun jolly')}</select>`}</div></div></article>`;
         return `<form id="general-form"><section class="panel" style="margin-bottom:14px"><div class="panel-head"><h2>${mine ? 'Modifica la squadra' : 'Crea la tua squadra'}</h2></div>
             <div class="field" style="max-width:420px"><label for="general-name">Nome della squadra</label><input id="general-name" name="name" maxlength="40" required value="${esc(generalDraft.name)}"></div></section>
-          <div class="choice-list">${slots}</div>
-          <div class="form-footer"><span class="form-message">Gli altri vedranno su quali classi hai scommesso, ma non i titoli, finché non esce il risultato di ciascuna classe.</span>
+          <div class="choice-list">${slots}${jollyCard}</div>
+          <div class="form-footer"><span class="form-message">Gli altri vedranno su quali classi hai scommesso, ma non i titoli né il jolly, finché non escono i risultati.</span>
             <div class="button-row">${mine ? '<button class="button secondary" type="button" data-action="cancel-general">Annulla</button>' : ''}<button class="button" type="submit">Salva squadra</button></div></div></form>`;
       }
 
       function renderGeneral() {
         const g = general;
         const mine = g.teams.find(t => t.mine);
-        const anyResult = Object.keys(g.results).length > 0;
         const canEdit = mine && g.classes.some(c => !resultOfClass(c.id));
         const resultsGrid = g.classes.map(c => `<div class="mini-result${g.results[c.id] ? ' done' : ''}"><b>${esc(c.name)}</b><span>${g.results[c.id] ? esc(titleOf(g.results[c.id].musicalKey)) : 'in attesa'}</span></div>`).join('');
-        const positions = positionsOf(g.teams);
-        const card = (t, i) => `<article class="team-card${t.mine ? ' mine' : ''}"><div class="team-head">${anyResult ? `<span class="rank-number">${positions[i]}</span>` : ''}${initials(t.name)}<div class="grow"><div class="person-name">${esc(t.name)}${t.mine ? ' <span class="subtle">(la tua)</span>' : ''}</div><div class="subtle">di ${esc(t.owner)}${t.ownerClass ? ` · ${esc(t.ownerClass)}` : ''}${t.mine ? ` · salvata ${esc(fmtDate(t.updatedAt))}` : ''}</div></div>${anyResult ? `<span class="board-score">${t.points} pt</span>` : ''}${t.mine && canEdit ? editButton('edit-general', 'Modifica la squadra') : ''}</div>
-            <div class="team-choices">${t.picks.map((p, k) => generalPickLine(p, k, t.hits?.[k])).join('')}</div></article>`;
-        // My team leads the list (compact, with the pencil); while editing, the editor takes its place.
-        const myIndex = g.teams.findIndex(t => t.mine);
-        const lead = editingGeneral || !mine ? generalEditor(mine) : card(mine, myIndex);
-        const othersHtml = g.teams.map((t, i) => (t.mine ? '' : card(t, i))).join('');
-        view.innerHTML = `${heading('Il Fantamusical di tutti', 'Lega generale', 'Scegli fino a tre classi diverse e indovina il musical che metterà in scena ciascuna: la prima scelta è sempre sulla tua classe. Qui si gioca solo con i titoli.')}
+
+        // Ranking: general, by the owner's class, or by day (the class prefix: Mer, Gio, Ven, Sab). Positions are recomputed inside the filter.
+        const inFilter = t => rankMode.type === 'class' ? t.ownerClass === rankMode.value
+          : rankMode.type === 'day' ? (t.ownerClass || '').slice(0, 3) === rankMode.value : true;
+        const ranked = g.teams.filter(inFilter);
+        const positions = positionsOf(ranked);
+        const days = [...new Set(g.classes.map(c => c.id.slice(0, 3)))];
+        const filterSelect = rankMode.type === 'class'
+          ? `<select id="rank-filter" aria-label="Classe">${g.classes.map(c => `<option value="${esc(c.id)}" ${c.id === rankMode.value ? 'selected' : ''}>${esc(c.name)}</option>`).join('')}</select>`
+          : rankMode.type === 'day'
+          ? `<select id="rank-filter" aria-label="Giorno">${days.map(d => `<option value="${esc(d)}" ${d === rankMode.value ? 'selected' : ''}>${esc(DAYS[d] || d)}</option>`).join('')}</select>` : '';
+        const modes = [['all', 'Generale'], ['class', 'Per classe'], ['day', 'Per giorno']]
+          .map(([type, label]) => `<button type="button" class="seg${rankMode.type === type ? ' active' : ''}" data-action="rank-mode" data-mode="${type}">${label}</button>`).join('');
+        const scope = rankMode.type === 'class' ? `i giocatori di ${esc(rankMode.value)}` : rankMode.type === 'day' ? `i giocatori del ${esc((DAYS[rankMode.value] || rankMode.value).toLowerCase())}` : 'tutti i giocatori';
+
+        const card = (t, pos) => `<article class="team-card${t.mine ? ' mine' : ''}"><div class="team-head"><span class="rank-number">${pos}</span>${initials(t.name)}<div class="grow"><div class="person-name">${esc(t.name)}${t.mine ? ' <span class="subtle">(la tua)</span>' : ''}</div><div class="subtle">di ${esc(t.owner)}${t.ownerClass ? ` · ${esc(t.ownerClass)}` : ''}${t.mine ? ` · salvata ${esc(fmtDate(t.updatedAt))}` : ''}</div></div><span class="board-score">${fmtNum(t.points)} pt</span>${t.mine && canEdit ? editButton('edit-general', 'Modifica la squadra') : ''}</div>
+            <div class="team-choices">${t.picks.map((p, k) => generalPickLine(p, k, t.hits?.[k])).join('')}${jollyLine(t.jolly, t.jollyHit, t.jollyCount)}</div></article>`;
+        // My team leads the list (compact, with the pencil, showing its position); while editing, the editor takes its place.
+        const myPos = ranked.indexOf(mine);
+        const lead = editingGeneral || !mine ? generalEditor(mine) : myPos >= 0 ? card(mine, positions[myPos]) : '';
+        const others = ranked.map((t, i) => (t.mine ? '' : card(t, positions[i]))).join('');
+        const allTied = ranked.length > 1 && ranked.every(t => t.points === ranked[0].points);
+        view.innerHTML = `${heading('Il Fantamusical di tutti', 'Lega generale', 'Tre classi con il loro musical (la prima è sempre la tua classe) più un musical jolly. Qui si gioca solo con i titoli.')}
           <section class="panel" style="margin-bottom:18px"><div class="panel-head"><h2>Risultati delle classi</h2><span class="subtle">${plural(Object.keys(g.results).length, 'uscito', 'usciti')} su ${g.classes.length}</span></div><div class="mini-results">${resultsGrid}</div></section>
-          <section><div class="panel-head"><h2>${anyResult ? 'Classifica' : 'Squadre in gara'}</h2><span class="subtle">${plural(g.teams.length, 'squadra', 'squadre')}</span></div>
-            <div class="team-list">${lead}${othersHtml || (mine ? '<p class="subtle">Nessun’altra squadra per ora.</p>' : '')}</div></section>`;
+          <section><div class="panel-head ranking-head"><h2>Classifica</h2><div class="ranking-controls"><div class="segmented">${modes}</div>${filterSelect}</div></div>
+            <p class="subtle" style="margin:-6px 0 12px">${plural(ranked.length, 'squadra', 'squadre')} · ${scope}${allTied ? ' · per ora tutti a pari merito' : ''}</p>
+            <div class="team-list">${lead}${others || (ranked.length ? '' : '<p class="subtle">Nessuna squadra in questa classifica.</p>')}</div></section>`;
       }
 
       /* ---------- My class league ---------- */
@@ -1105,7 +1143,7 @@
       // Compact, read-only view of a class team (formations included), with result marks.
       function teamCard(team, position, actions = '') {
         const meta = team.hasTeam ? `di ${esc(team.owner)}${team.updatedAt ? ` · ${esc(fmtDate(team.updatedAt))}` : ''}` : 'Non ha ancora schierato una squadra';
-        const head = `<div class="team-head">${position ? `<span class="rank-number">${position}</span>` : ''}${initials(team.name || team.owner)}<div class="grow"><div class="person-name">${esc(team.name || team.owner)}${team.mine ? ' <span class="subtle">(la tua)</span>' : ''}</div><div class="subtle">${meta}</div></div>${cls.result && team.hasTeam ? `<span class="board-score">${team.points} pt</span>` : ''}${actions}</div>`;
+        const head = `<div class="team-head">${position ? `<span class="rank-number">${position}</span>` : ''}${initials(team.name || team.owner)}<div class="grow"><div class="person-name">${esc(team.name || team.owner)}${team.mine ? ' <span class="subtle">(la tua)</span>' : ''}</div><div class="subtle">${meta}</div></div>${team.hasTeam ? `<span class="board-score">${fmtNum(team.points || 0)} pt</span>` : ''}${actions}</div>`;
         if (!team.hasTeam) return `<article class="team-card muted">${head}</article>`;
         const choices = team.choices.map((choice, k) => {
           const cast = Object.entries(normCast(choice.cast)).map(([role, ids]) => `<span class="role-chip">${esc(role)}: ${ids.map(id => `${isHitActor(choice, role, id) ? '✓ ' : ''}${esc(actorName(id))}`).join(', ')}</span>`).join('');
@@ -1137,16 +1175,18 @@
         const c = cls;
         const mine = c.teams.find(t => t.mine);
         const played = c.teams.filter(t => t.hasTeam).length;
-        const positions = c.result ? positionsOf(c.teams) : [];
-        const myIndex = c.teams.findIndex(t => t.mine);
+        // Always a ranking: before the result everyone with a team is tied at 0 (position 1). Members without a team have no position.
+        const ranked = c.teams.filter(t => t.hasTeam);
+        const posOf = t => (t.hasTeam ? ranked.findIndex(o => (o.points || 0) === (t.points || 0)) + 1 : 0);
         // My team leads the list (compact, with the pencil); while editing, the editor takes its place.
         const lead = editingTeam && !c.result
           ? teamEditor(mine)
-          : mine ? teamCard(mine, positions[myIndex], mine.hasTeam && !c.result ? editButton('edit-team', 'Modifica la squadra') : '') : '';
-        const others = c.teams.map((t, i) => (t.mine ? '' : teamCard(t, positions[i]))).join('');
+          : mine ? teamCard(mine, posOf(mine), mine.hasTeam && !c.result ? editButton('edit-team', 'Modifica la squadra') : '') : '';
+        const others = c.teams.map(t => (t.mine ? '' : teamCard(t, posOf(t)))).join('');
+        const allTied = ranked.length > 1 && ranked.every(t => (t.points || 0) === (ranked[0].points || 0));
         view.innerHTML = `${heading(`Lega della classe · visibile solo ai membri di ${esc(c.id)}`, `La mia classe · ${c.id}`, `${plural(c.actors.length, 'attore', 'attori')} · ${plural(played, 'squadra schierata', 'squadre schierate')}${c.result ? ` · risultato: ${esc(titleOf(c.result.musicalKey))}` : ''}`, '<button class="button secondary small" data-action="reload">↻ Aggiorna</button>')}
           ${c.result && mine?.hasTeam ? `<div class="result-strip"><div><div class="eyebrow">Risultato ufficiale</div><div class="result-title">${esc(titleOf(c.result.musicalKey))}</div></div><div class="result-points">${mine.points}<span> pt</span></div></div>` : ''}
-          <section><div class="panel-head"><h2>${c.result ? 'Classifica' : 'Squadre della classe'}</h2><span class="subtle">${played} su ${plural(c.teams.length, 'membro', 'membri')}</span></div>
+          <section><div class="panel-head"><h2>Classifica</h2><span class="subtle">${played} su ${plural(c.teams.length, 'membro', 'membri')} in gara${allTied && !c.result ? ' · tutti a pari merito fino al risultato' : ''}</span></div>
             <div class="team-list">${lead}${others}</div></section>
           ${resultPanel()}
           <section class="panel" style="margin-top:18px"><div class="panel-head"><h2>Attori di ${esc(c.id)}</h2></div>
@@ -1166,14 +1206,14 @@
             ${ul([
               'Ogni classe (MerA, MerB, MerC, GioA, GioB, VenA, VenB, SabA, SabB) mette in scena un musical: devi indovinare <b>quale</b> e, nella tua classe, <b>chi farà quale ruolo</b>.',
               'Entri scegliendo la tua classe e il tuo nome: diventi un <b>attore</b> della classe. La classe non si può più cambiare.',
-              'Giochi in <b>due leghe</b>, con una squadra in ciascuna: la <b>lega generale</b> (tutte le classi, solo titoli) e la <b>lega della tua classe</b> (titoli e formazioni).',
+              'Giochi in <b>due leghe</b>, con una squadra in ciascuna: la <b>lega generale</b> (tutte le classi, solo titoli, più un musical jolly) e la <b>lega della tua classe</b> (titoli e formazioni).',
               'Le squadre si modificano fino all’uscita del risultato della classe interessata; poi si contano i punti.'
             ])}
             <table class="points-table">
-              <thead><tr><th></th><th>1ª scelta</th><th>2ª scelta</th><th>3ª scelta</th><th>Formazione</th><th>Massimo</th></tr></thead>
+              <thead><tr><th></th><th>1ª scelta</th><th>2ª scelta</th><th>3ª scelta</th><th>Extra</th><th>Massimo</th></tr></thead>
               <tbody>
-                <tr><th>Lega generale</th><td>6</td><td>3</td><td>1</td><td>—</td><td>10</td></tr>
-                <tr><th>Lega della classe</th><td>6</td><td>3</td><td>1</td><td>fino a 12</td><td>18</td></tr>
+                <tr><th>Lega generale</th><td>9</td><td>6</td><td>4</td><td>jolly +3 per classe</td><td>28</td></tr>
+                <tr><th>Lega della classe</th><td>6</td><td>3</td><td>1</td><td>formazione fino a 12</td><td>18</td></tr>
               </tbody>
             </table>
           </section>
@@ -1187,11 +1227,12 @@
             ]))}
             ${section(2, 'La lega generale', ul([
               'È aperta a tutti i giocatori e riguarda <b>tutte le classi</b>. Si gioca solo con i <b>titoli</b>.',
-              'La squadra ha un <b>nome</b> e fino a <b>3 scelte</b>. Ogni scelta è una <b>classe diversa</b> più il musical che pensi metterà in scena.',
+              'La squadra ha un <b>nome</b>, fino a <b>3 scelte</b> e un <b>musical jolly</b>. Ogni scelta è una <b>classe diversa</b> più il musical che pensi metterà in scena.',
               'La <b>1ª scelta è obbligatoria ed è sempre sulla tua classe</b>. La 2ª e la 3ª sono facoltative, su altre classi a tua scelta.',
-              'Ogni scelta indovinata vale <b>6, 3 o 1 punto</b> (1ª, 2ª, 3ª scelta).',
-              'Gli altri vedono il nome della tua squadra e <b>su quali classi</b> hai scommesso, ma <b>non i titoli</b>: ognuno si scopre quando esce il risultato della sua classe.'
-            ]) + `<div class="score-legend" style="margin:10px 0 4px"><strong>Esempio:</strong> sei in MerA e scegli 1ª MerA → <i>Wicked</i>, 2ª GioB → <i>Cats</i>, 3ª SabA → <i>Grease</i>. Se MerA fa <i>Wicked</i> e SabA fa <i>Grease</i>, ma GioB fa un altro musical, prendi 6 + 1 = <b>7 punti</b>.</div>`)}
+              'Ogni scelta indovinata vale <b>9, 6 o 4 punti</b> (1ª, 2ª, 3ª scelta).',
+              'Il <b>jolly</b> è un musical senza classe, facoltativo: prendi <b>3 punti in più per ogni classe su cui hai scommesso</b> che lo mette in scena (6 se sono due classi, 9 se sono tre). Può anche coincidere con il titolo di una tua scelta.',
+              'Gli altri vedono il nome della tua squadra e <b>su quali classi</b> hai scommesso, ma <b>non i titoli</b>: ognuno si scopre quando esce il risultato della sua classe. Il jolly resta segreto finché non fa punti o finché non sono usciti i risultati di tutte le tue classi.'
+            ]) + `<div class="score-legend" style="margin:10px 0 4px"><strong>Esempio:</strong> sei in MerA e scegli 1ª MerA → <i>Wicked</i>, 2ª GioB → <i>Cats</i>, 3ª SabA → <i>Grease</i>, jolly <i>Matilda</i>. MerA fa <i>Wicked</i> (<b>+9</b>), GioB fa <i>Matilda</i> (la scelta è sbagliata, ma scatta il jolly: <b>+3</b>), SabA fa <i>Grease</i> (<b>+4</b>). Totale <b>16 punti</b>.</div>`)}
             ${section(3, 'La lega della tua classe', ul([
               'È privata: la vedono <b>tutti e soli i membri della tua classe</b>, e ci sei dentro automaticamente.',
               'La squadra ha un nome e fino a <b>3 musical diversi</b>, in ordine di preferenza: valgono <b>6, 3 o 1 punto</b> se il musical della classe è la tua 1ª, 2ª o 3ª scelta.',
@@ -1213,7 +1254,8 @@
             ${section(5, 'Modifiche e scadenze', ul([
               'Una volta salvata, la tua squadra compare <b>in cima all’elenco</b> delle squadre. Per cambiarla tocca la matita ✏️.',
               '<b>Lega della classe</b>: puoi modificare la squadra finché non esce il risultato della tua classe.',
-              '<b>Lega generale</b>: puoi modificarla quando vuoi, ma una scelta su una classe il cui risultato è uscito resta bloccata, e non puoi più scegliere classi con il risultato già uscito.'
+              '<b>Lega generale</b>: puoi modificarla quando vuoi, ma una scelta su una classe il cui risultato è uscito resta bloccata, e non puoi più scegliere classi con il risultato già uscito.',
+              'Il <b>jolly</b> si blocca appena esce il risultato di <b>una qualsiasi</b> delle classi su cui hai scommesso.'
             ]))}
             ${section(6, 'Il risultato ufficiale', ul([
               'Lo inserisce <b>un membro della classe</b>, dalla pagina <i>La mia classe</i>: musical assegnato e cast ufficiale, da 1 a 6 interpreti per personaggio.',
@@ -1222,7 +1264,9 @@
               'Si può correggere o annullare. Annullandolo, le squadre della classe tornano modificabili.'
             ]))}
             ${section(7, 'Classifiche', ul([
-              'Ogni lega ha la sua classifica, aggiornata a ogni risultato. Sotto ogni squadra trovi il dettaglio: punti del musical, punti degli attori e malus.',
+              'Le squadre sono sempre mostrate <b>in ordine di classifica</b>, aggiornata a ogni risultato; la tua resta in testa all’elenco con la sua posizione. Prima dei risultati sono tutte a pari merito.',
+              'Nella lega della classe, sotto ogni squadra trovi il dettaglio: punti del musical, punti degli attori e malus.',
+              'Nella lega generale puoi vedere la classifica <b>generale</b>, <b>per classe</b> (solo i giocatori di una classe) o <b>per giorno</b> (solo i giocatori delle classi di quel giorno: mercoledì, giovedì, venerdì, sabato).',
               'A parità di punti si è <b>a pari merito</b> e si occupa la stessa posizione.'
             ]))}
             ${section(8, 'Il catalogo', p('Il catalogo dei musical è comune a tutti. Se manca un titolo o un personaggio, chiunque può aggiungerlo dalla pagina <i>Catalogo</i>. Per schierare una formazione, il musical deve avere i personaggi nel catalogo.'))}
@@ -1410,6 +1454,12 @@
         // Local edit-mode switches (no server call).
         const local = {
           'edit-general': () => { editingGeneral = true; renderGeneral(); },
+          'rank-mode': () => {
+            const type = button.dataset.mode;
+            const own = me.user.classId;
+            rankMode = { type, value: type === 'class' ? own : type === 'day' ? own.slice(0, 3) : '' };
+            renderGeneral();
+          },
           'cancel-general': () => { resetGeneralDraft(); renderGeneral(); },
           'edit-team': () => { editingTeam = true; renderMyClass(); },
           'cancel-team': () => { resetTeamDraft(); renderMyClass(); },
@@ -1466,6 +1516,8 @@
           generalDraft.picks[i] = target.value ? { classId: target.value, musicalKey: generalDraft.picks[i]?.musicalKey || '' } : null;
           renderGeneral(); return;
         }
+        if (target.dataset.generalJolly !== undefined) { generalDraft.jolly = target.value; return; }
+        if (target.id === 'rank-filter') { rankMode.value = target.value; renderGeneral(); return; }
         if (target.dataset.generalMusical !== undefined) {
           const i = Number(target.dataset.generalMusical);
           if (generalDraft.picks[i]) generalDraft.picks[i].musicalKey = target.value;
@@ -1510,7 +1562,7 @@
           if (!generalDraft.picks[0]?.musicalKey && !general.teams.find(t => t.mine)?.hits?.[0] && !resultOfClass(me.user.classId)) { toast(`La prima scelta è obbligatoria: scegli il musical di ${me.user.classId}.`); return; }
           if (generalDraft.picks.some(p => p && p.classId && !p.musicalKey)) { toast('Scegli il musical per ogni classe selezionata.'); return; }
           if (!picks.some(Boolean)) { toast('Scegli almeno una classe e il suo musical.'); return; }
-          await api('saveGeneralTeam', { name: data.get('name'), picks });
+          await api('saveGeneralTeam', { name: data.get('name'), picks, jolly: generalDraft.jolly || null });
           await loadGeneral(); renderGeneral(); toast('Squadra salvata.');
         });
         if (form.id === 'team-form') return withBusy(button, async () => {
