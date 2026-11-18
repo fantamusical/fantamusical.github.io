@@ -481,6 +481,9 @@
       const JOLLY_POINTS = 3;
       const DAYS = { Mer: 'Mercoledì', Gio: 'Giovedì', Ven: 'Venerdì', Sab: 'Sabato' };
       const MAX_ACTORS = 6;
+      // Special option: a musical written on purpose for the class. No roles; in the class league it is worth double.
+      const NEW_MUSICAL = 'nuovo musical';
+      const NEW_MUSICAL_TITLE = 'NUOVO MUSICAL (scritto apposta)';
       const seedCatalog = [
         ["The 25th Annual Putnam County Spelling Bee","William Barfée, Olive Ostrovsky, Leaf Coneybear, Logainne SchwartzandGrubenierre, Chip Tolentino, Marcy Park, Rona Lisa Peretti, Vice Principal Douglas Panch, Mitch Mahoney"],
         ["42nd Street","Peggy Sawyer, Julian Marsh, Dorothy Brock, Billy Lawlor, Maggie Jones, Bert Barry, Pat Denning, Anytime Annie, Abner Dillon"],
@@ -822,7 +825,7 @@
       };
       const heading = (eyebrow, title, intro, action = '') => `<div class="page-heading"><div><div class="eyebrow">${eyebrow}</div><h1>${esc(title)}</h1>${intro ? `<p class="intro">${intro}</p>` : ''}</div>${action}</div>`;
       const initials = name => `<span class="avatar fallback">${esc((name || '?').slice(0, 1).toUpperCase())}</span>`;
-      const titleOf = key => catalogByKey.get(key)?.title || key || '—';
+      const titleOf = key => key === NEW_MUSICAL ? NEW_MUSICAL_TITLE : catalogByKey.get(key)?.title || key || '—';
       const fmtNum = n => String(n ?? 0).replace('.', ',');
       const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
       const setCrumb = html => { document.getElementById('crumb').innerHTML = html; };
@@ -848,7 +851,7 @@
         entry.roles.forEach(role => { if (!existing.roles.some(r => musicalKey(r) === musicalKey(role))) existing.roles.push(role); });
       }
       function applyCatalogEntry(entry) { mergeCatalogEntry(catalogByKey, entry); catalog = [...catalogByKey.values()].sort(byTitle); }
-      const musicalOptions = (selected, placeholder = 'Scegli un musical') => `<option value="">${placeholder}</option>${catalog.map(m => `<option value="${esc(m.key)}" ${m.key === selected ? 'selected' : ''}>${esc(m.title)}</option>`).join('')}${selected && !catalogByKey.has(selected) ? `<option value="${esc(selected)}" selected>${esc(selected)}</option>` : ''}`;
+      const musicalOptions = (selected, placeholder = 'Scegli un musical') => `<option value="">${placeholder}</option><option value="${NEW_MUSICAL}" ${selected === NEW_MUSICAL ? 'selected' : ''}>✨ ${NEW_MUSICAL_TITLE}</option>${catalog.map(m => `<option value="${esc(m.key)}" ${m.key === selected ? 'selected' : ''}>${esc(m.title)}</option>`).join('')}${selected && selected !== NEW_MUSICAL && !catalogByKey.has(selected) ? `<option value="${esc(selected)}" selected>${esc(selected)}</option>` : ''}`;
 
       /* ---------- Google sign-in ---------- */
       function decodeJwt(token) {
@@ -1142,11 +1145,13 @@
       function teamEditor(mine) {
         const cards = draft.map((choice, index) => {
           const roles = catalogByKey.get(choice.musicalKey)?.roles || [];
+          const isNew = choice.musicalKey === NEW_MUSICAL;
           const cast = !choice.musicalKey ? '<div class="subtle">Scegli un musical per comporre la formazione.</div>'
+            : isNew ? `<div class="subtle">Musical scritto apposta: non ci sono ruoli da indovinare. Se è quello giusto vale doppio: <b>${MUSICAL_POINTS[index] * 2} punti</b>.</div>`
             : !roles.length ? '<div class="subtle">Questo musical non ha ancora ruoli: aggiungili dal Catalogo.</div>'
             : !cls.actors.length ? '<div class="subtle">Nessun attore registrato in classe.</div>'
             : roles.map(role => castPicker('team', index, role, choice.cast[role] || [])).join('');
-          return `<article class="choice-card"><div class="choice-top"><div class="choice-rank">${index + 1}</div><div class="field"><label for="musical-${index}">${['Prima', 'Seconda', 'Terza'][index]} scelta · ${MUSICAL_POINTS[index]} pt</label><select id="musical-${index}" data-musical-rank="${index}">${musicalOptions(choice.musicalKey)}</select></div></div>
+          return `<article class="choice-card"><div class="choice-top"><div class="choice-rank">${index + 1}</div><div class="field"><label for="musical-${index}">${['Prima', 'Seconda', 'Terza'][index]} scelta · ${isNew ? `${MUSICAL_POINTS[index] * 2} pt (doppio)` : `${MUSICAL_POINTS[index]} pt`}</label><select id="musical-${index}" data-musical-rank="${index}">${musicalOptions(choice.musicalKey)}</select></div></div>
             <div class="cast-wrap"><div class="cast-heading"><h3>Formazione ${index + 1}</h3><span class="subtle">fino a ${MAX_ACTORS} attori per ruolo</span></div><div class="cast-grid">${cast}</div></div></article>`;
         }).join('');
         return `<form id="team-form"><section class="panel" style="margin-bottom:14px"><div class="panel-head"><h2>${mine?.hasTeam ? 'Modifica la squadra' : 'Crea la tua squadra'}</h2></div>
@@ -1165,7 +1170,8 @@
           const cast = Object.entries(normCast(choice.cast)).map(([role, ids]) => `<span class="role-chip">${esc(role)}: ${ids.map(id => `${isHitActor(choice, role, id) ? '✓ ' : ''}${esc(actorName(id))}`).join(', ')}</span>`).join('');
           return `<div class="team-choice${isHitMusical(choice) ? ' hit' : ''}"><span class="choice-num">${k + 1}</span><div class="grow"><b>${esc(titleOf(choice.musicalKey))}</b>${isHitMusical(choice) ? ' <span class="status-ok">✓</span>' : ''}${cast ? `<div class="role-list" style="margin:6px 0 0">${cast}</div>` : ''}</div></div>`;
         }).join('');
-        const breakdown = cls.result && team.rank >= 0 ? `<div class="points-breakdown">Musical +${team.musical} · attori +${fmtNum(team.actorPoints)} · malus −${fmtNum(team.malus)} → formazione ${fmtNum(team.cast)}</div>` : '';
+        const breakdown = cls.result && team.rank >= 0 && cls.result.musicalKey === NEW_MUSICAL ? `<div class="points-breakdown">Nuovo musical indovinato: +${team.musical} (punti doppi, nessuna formazione)</div>`
+          : cls.result && team.rank >= 0 ? `<div class="points-breakdown">Musical +${team.musical} · attori +${fmtNum(team.actorPoints)} · malus −${fmtNum(team.malus)} → formazione ${fmtNum(team.cast)}</div>` : '';
         return `<article class="team-card${team.mine ? ' mine' : ''}">${head}<div class="team-choices">${choices}</div>${breakdown}</article>`;
       }
 
@@ -1178,6 +1184,7 @@
         }
         const roles = catalogByKey.get(resultDraft.musicalKey)?.roles || [];
         const castFields = !resultDraft.musicalKey ? '<div class="subtle">Seleziona il musical assegnato per inserire il cast.</div>'
+          : resultDraft.musicalKey === NEW_MUSICAL ? '<div class="subtle">Nuovo musical scritto apposta: non c’è cast da inserire.</div>'
           : !cls.actors.length ? '<div class="subtle">Nessun attore registrato: puoi pubblicare solo il musical.</div>'
           : roles.map(role => castPicker('result', 0, role, resultDraft.cast[role] || [])).join('');
         return `<section class="panel" style="margin-top:18px"><div class="panel-head"><h2>Risultato ufficiale di ${esc(cls.id)}</h2></div>
@@ -1230,6 +1237,7 @@
               <tbody>
                 <tr><th>Lega generale</th><td>9</td><td>6</td><td>4</td><td>jolly +3</td><td>19 + jolly</td></tr>
                 <tr><th>Lega della classe</th><td>6</td><td>3</td><td>1</td><td>formazione fino a 12</td><td>18</td></tr>
+                <tr><th>Nuovo musical (classe)</th><td>12</td><td>6</td><td>2</td><td>nessuna formazione</td><td>12</td></tr>
               </tbody>
             </table>
           </section>
@@ -1246,6 +1254,7 @@
               'La squadra ha un <b>nome</b>, fino a <b>3 scelte</b> e un <b>musical jolly</b>. Ogni scelta è una <b>classe diversa</b> più il musical che pensi metterà in scena.',
               'La <b>1ª scelta è obbligatoria ed è sempre sulla tua classe</b>. La 2ª e la 3ª sono facoltative, su altre classi a tua scelta.',
               'Ogni scelta indovinata vale <b>9, 6 o 4 punti</b> (1ª, 2ª, 3ª scelta).',
+              'Puoi scegliere anche <b>NUOVO MUSICAL</b> (un musical scritto apposta), sia nelle scelte sia come jolly: qui vale come un titolo qualsiasi, senza raddoppio.',
               'Il <b>jolly</b> è un musical senza classe, facoltativo, che vale solo sulle <b>classi su cui non hai scommesso</b>: prendi <b>3 punti</b> se una di queste lo mette in scena, il doppio se sono due, e così via. Se lo mette in scena una delle tue tre classi, il jolly non conta.',
               'Gli altri vedono il nome della tua squadra e <b>su quali classi</b> hai scommesso, ma <b>non i titoli</b>: ognuno si scopre quando esce il risultato della sua classe. Il jolly resta segreto finché non fa punti o finché non sono usciti i risultati di tutte le classi su cui non hai scommesso.'
             ]) + `<div class="score-legend" style="margin:10px 0 4px"><strong>Esempio:</strong> sei in MerA e scegli 1ª MerA → <i>Wicked</i>, 2ª GioB → <i>Cats</i>, 3ª SabA → <i>Grease</i>, jolly <i>Matilda</i>. MerA fa <i>Wicked</i> (<b>+9</b>), GioB fa un altro musical (0), SabA fa <i>Grease</i> (<b>+4</b>) e VenA, su cui non hai scommesso, fa <i>Matilda</i>: scatta il jolly (<b>+3</b>). Totale <b>16 punti</b>.</div>`)}
@@ -1253,6 +1262,7 @@
               'È privata: la vedono <b>tutti e soli i membri della tua classe</b>, e ci sei dentro automaticamente.',
               'La squadra ha un nome e fino a <b>3 musical diversi</b>, in ordine di preferenza: valgono <b>6, 3 o 1 punto</b> se il musical della classe è la tua 1ª, 2ª o 3ª scelta.',
               'Per ogni musical schieri la <b>formazione</b>: a ogni personaggio assegni da <b>1 a 6 attori</b> della classe. Un attore può comparire su più personaggi.',
+              'Tra le opzioni c’è anche <b>NUOVO MUSICAL</b>: un musical scritto apposta per la classe. Non ha ruoli, quindi non c’è formazione da schierare, ma se è quello giusto <b>vale doppio</b>: 12, 6 o 2 punti (1ª, 2ª, 3ª scelta).',
               'Squadre e formazioni sono visibili a <b>tutti e soli i membri</b> della classe.'
             ]))}
             ${section(4, 'Come si contano i punti della formazione', p('Conta <b>solo la formazione del musical indovinato</b>. La formazione vale al massimo <b>12 punti</b> e si calcola sugli <b>attori</b>, perché l’unica certezza è che ogni attore interpreta almeno un personaggio: non si sa quanti attori faranno ogni personaggio, né se tutti i personaggi verranno interpretati.') + ul([
@@ -1275,6 +1285,7 @@
             ]))}
             ${section(6, 'Il risultato ufficiale', ul([
               'Lo inserisce <b>un membro della classe</b>, dalla pagina <i>La mia classe</i>: musical assegnato e cast ufficiale, da 1 a 6 interpreti per personaggio.',
+              'Se la classe mette in scena un musical scritto apposta, si sceglie <b>NUOVO MUSICAL</b> e non si inserisce il cast.',
               'Chi interpreta un personaggio ma non partecipa al gioco va inserito con <b>+ attore esterno</b>, senza nome.',
               'Vale sia per la lega della classe sia per la lega generale.',
               'Si può correggere o annullare. Annullandolo, le squadre della classe tornano modificabili.'
@@ -1594,6 +1605,7 @@
         if (form.id === 'musical-form') return withBusy(button, async () => {
           const title = String(data.get('title')).trim();
           const roles = String(data.get('roles') || '').split(',').map(r => r.trim()).filter(Boolean);
+          if (musicalKey(title) === NEW_MUSICAL) { toast('«Nuovo musical» è già un’opzione speciale: non serve aggiungerlo.'); return; }
           if (catalogByKey.has(musicalKey(title)) && !roles.length) { toast('Questo musical è già nel catalogo.'); return; }
           applyCatalogEntry(await api('catalogUpsert', { title, roles }));
           catalogQuery = title; renderCatalog(); toast('Catalogo aggiornato.');
